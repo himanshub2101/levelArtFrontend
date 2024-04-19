@@ -1,0 +1,40 @@
+{
+  "expo": {
+    "name": "levelart",
+    "slug": "levelart",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/logo.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "permissions": {
+      "mediaLibrary": true
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.mrfrek19.levelart"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/logo.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.mrfrek19.levelart"
+    },
+    "web": {
+      "favicon": "./assets/logo.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "6aef92c6-1075-4f76-b409-c8e7241b5b7a"
+      }
+    }
+  }
+}
