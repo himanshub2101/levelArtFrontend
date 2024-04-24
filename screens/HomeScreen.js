@@ -1,17 +1,21 @@
 import React, { useEffect, useContext, useState, useCallback } from "react";
-import { StyleSheet, Text, View, ScrollView, Image, RefreshControl, TouchableOpacity } from "react-native";
+import { StyleSheet, Text, View, ScrollView, Image, RefreshControl, TouchableOpacity, Modal, Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import jwt_decode from "jwt-decode";
 import axios from "axios";
 import { AntDesign, FontAwesome, Ionicons } from "@expo/vector-icons";
 import logo from '../assets/logo.png';
 import { UserType } from "../UserContext";
+import MessageContainer from "../components/messageContainer"; // Import MessageContainer component
 
 const HomeScreen = ({ route }) => {
   const { userId, setUserId } = useContext(UserType);
   const [posts, setPosts] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const [userIdSet, setUserIdSet] = useState(false);
+  const [showChat, setShowChat] = useState(false); // State to manage chat screen visibility
+  const [selectedPost, setSelectedPost] = useState(null); // State to store the selected post
+  const [modalVisible, setModalVisible] = useState(false); // State to manage the modal visibility
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -52,32 +56,29 @@ const HomeScreen = ({ route }) => {
   const fetchPosts = async () => {
     try {
       const token = await AsyncStorage.getItem("authToken");
+      const decodedToken = jwt_decode(token)
+      console.log("decodedToken:", decodedToken
+    )
       const headers = {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       };
 
-      const responseFollowings = await axios.get(`https://levelartbackend-production.up.railway.app/followers/${userId}/following`, { headers });
+      const responseFollowings = await axios.get(`http:/local:3000/followers/${userId}/following`, { headers });
       const followings = responseFollowings.data;
-
-      console.log("responseFollowings:",responseFollowings)
-
+console.log("responseFollowings:",responseFollowings)
       const postsPromises = followings.map(async (followingId) => {
-        const response = await axios.get(`https://levelartbackend-production.up.railway.app/posts/user/${followingId}`, { headers });
-        console.log("response:",response)
-
+        const response = await axios.get(`http:/local:3000/user/${followingId}`, { headers });
         return response.data;
       });
 
-      const responseUserPosts = await axios.get(`https://levelartbackend-production.up.railway.app/posts/user/${userId}`, { headers });
+      const responseUserPosts = await axios.get(`http:/local:3000/posts/user/${userId}`, { headers });
       const userPosts = responseUserPosts.data;
       const postsResponses = await Promise.all(postsPromises);
 
       const allPosts = postsResponses.reduce((accumulator, currentPosts) => accumulator.concat(currentPosts), []);
 
-      const combinedPosts = [...allPosts, ...userPosts];
-      console.log("Combined Posts:", combinedPosts); // Log combinedPosts
-
+      const combinedPosts = [...allPosts, ...userPosts].map(post => ({ ...post, liked: post.likes.includes(userId) }));
       setPosts(combinedPosts);
     } catch (error) {
       console.log("Error fetching posts", error);
@@ -86,33 +87,60 @@ const HomeScreen = ({ route }) => {
   
   const handleLike = async (postId) => {
     try {
-      // Code for handling like
+      const token = await AsyncStorage.getItem("authToken")
+
+      console.log("token:",token)
+      // Send a POST request to your backend API endpoint for liking the post
+      const response = await axios.post(`http:/local:3000//posts/${postId}/like`, null, {
+        headers: {
+          Authorization: `Bearer ${token}`, // Replace YOUR_AUTH_TOKEN with the actual authentication token
+        },
+      });
+      // Update the liked state for the post
+      setPosts(prevPosts =>
+        prevPosts.map(post =>
+          post._id === postId ? { ...post, liked: !post.liked, likes: post.liked ? post.likes.filter(id => id !== userId) : [...post.likes, userId] } : post
+        )
+      );
+      console.log("response:",response)
+
+      console.log("Post liked/unliked successfully:", response.data.message);
+      // You can perform additional actions after successfully liking/unliking the post
     } catch (error) {
-      console.log("Error liking the post", error);
+      console.error("Error liking the post", error);
     }
   };
 
+  const openOptionsModal = (post) => {
+    setSelectedPost(post);
+    setModalVisible(true);
+  };
+
+  const closeOptionsModal = () => {
+    setSelectedPost(null);
+    setModalVisible(false);
+  };
+
   const renderPost = (post) => {
-    console.log("post:", post)
     return (
       <View key={`${post.postedBy}-${post.postId}`} style={styles.post}>
         <View style={styles.postHeader}>
-          {/* Render profile picture if available */}
           {post.user && post.user.profilePicture && (
             <Image source={{ uri: post.user.profilePicture }} style={styles.profilePicture} />
           )}
           <Text style={styles.username}>{post.postedBy}</Text>
+          <TouchableOpacity onPress={() => openOptionsModal(post)}>
+            <Ionicons name="ellipsis-vertical" size={24} color="black" />
+          </TouchableOpacity>
         </View>
         <View style={styles.postContent}>
-          {/* Render text content if available */}
           {post.text && <Text>{post.text}</Text>}
-          {/* Render image if available */}
           {post.img && (
             <Image source={{ uri: post.img }} style={styles.postImage} />
           )}
           <View style={styles.actionButtons}>
             <TouchableOpacity onPress={() => handleLike(post._id)}>
-              <AntDesign name="hearto" size={24} color="black" />
+              <AntDesign name={post.liked ? "heart" : "hearto"} size={24} color={post.liked ? "red" : "black"} />
             </TouchableOpacity>
             <TouchableOpacity onPress={() => {}}>
               <FontAwesome name="comment-o" size={24} color="black" />
@@ -126,6 +154,7 @@ const HomeScreen = ({ route }) => {
       </View>
     );
   };
+  
 
   return (
     <ScrollView
@@ -134,15 +163,44 @@ const HomeScreen = ({ route }) => {
     >
       <View style={styles.header}>
         <Image style={styles.logo} source={logo} />
-          {/* Chat icon */}
-          <TouchableOpacity style={styles.chatIconContainer} onPress={() => {/* Handle chat icon press */}}>
+        <TouchableOpacity style={styles.chatIconContainer} onPress={() => setShowChat(!showChat)}>
           <Ionicons name="chatbubble-outline" size={24} color="black" />
         </TouchableOpacity>
       </View>
-
+      
       <View style={styles.postContainer}>
         {posts.map((post) => renderPost(post))}
       </View>
+
+      {/* Options Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={closeOptionsModal}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <TouchableOpacity onPress={closeOptionsModal}>
+              <Text style={styles.closeModalText}>Close</Text>
+            </TouchableOpacity>
+            {/* Add your options here */}
+            {/* For example: */}
+            <TouchableOpacity onPress={() => {}}>
+              <Text>Option 1</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => {}}>
+              <Text>Option 2</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => {}}>
+              <Text>Option 3</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Render chat container if showChat is true */}
+      {showChat && <MessageContainer />}
     </ScrollView>
   );
 };
@@ -156,8 +214,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 20,
     marginBottom: 10,
-    borderBottomWidth: 1, // Add border to the bottom of the header
-    borderBottomColor: "#ddd", // Border color
+    borderBottomWidth: 1,
+    borderBottomColor: "#ddd",
   },
   chatIconContainer: {
     position: "absolute",
@@ -185,8 +243,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 10,
     paddingVertical: 8,
-    maxHeightheight:300,
-    minHeight:100
   },
   profilePicture: {
     width: 40,
@@ -198,10 +254,10 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   postContent: {
-    minHeight: 100, // Adjust the minHeight as needed
-    paddingVertical: 10, // Add padding to increase content area vertically
+    minHeight: 100,
+    paddingVertical: 10,
   },
-    postImage: {
+  postImage: {
     width: "100%",
     height: 300,
   },
@@ -217,6 +273,22 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     paddingHorizontal: 10,
     marginBottom: 5,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContent: {
+    backgroundColor: "white",
+    padding: 20,
+    borderRadius: 10,
+    elevation: 5,
+  },
+  closeModalText: {
+    alignSelf: "flex-end",
+    marginBottom: 10,
   },
 });
 
