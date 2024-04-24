@@ -88,16 +88,16 @@ const RegisterScreen = () => {
     if (hasError) return;
   
     const user = {
-      name: username,
+      username: username,
       email: email,
       password: password,
-      confirmPassword: confirmpassword,
-      phoneNumber: phonenumber
+      confirmpassword: confirmpassword,
+      phonenumber: phonenumber
     };
   
   
-    axios.post("https://levelartbackend-production.up.railway.app/users/register", user)
-      .then((response) => {
+    axios.post("http://localhost:3000/users/register", user)
+    .then((response) => {
         console.log(response);
         Alert.alert(
           "Registration successful",

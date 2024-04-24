@@ -59,7 +59,7 @@ const LoginScreen = () => {
       };
   
       // Use axios.post which returns a promise
-      const response = await axios.post("https://levelartbackend-production.up.railway.app/auth/login", user);
+      const response = await axios.post("http://localhost:3000/auth/login", user);
   
       // Check if the response status is 200 (OK)
       if (response.status === 200) {

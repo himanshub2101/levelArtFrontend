@@ -6,165 +6,86 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import jwt_decode from "jwt-decode";
 
 const ThreadsScreen = () => {
-  const [postedBy, setPostedBy] = useState("");
-  const [content, setContent] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-  const [img, setImage] = useState(null); // State to store selected image URI
+  const [content, setContent] = useState('');
+  const [image, setImage] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    const fetchUserId = async () => {
-      try {
-        const tokenInThreadScreen = await AsyncStorage.getItem("authToken");
-        const decodedToken = jwt_decode(tokenInThreadScreen);
-        const userId = decodedToken?.sub; // Extract userId from decoded token
-        console.log("userIdFromThreadScreen:", userId);
-        if (userId) {
-          setPostedBy(userId);
-        } else {
-          console.log("User ID not found in AsyncStorage");
-        }
-      } catch (error) {
-        console.error("Error fetching userId from AsyncStorage:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchUserId();
-  }, []);
-  
-  const handlePostSubmit = async () => {
-    if (!content && !img) {
-      console.log("Text field or image is required");
+  const handleImagePicker = async () => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (permissionResult.granted === false) {
+      alert('Permission to access camera roll is required!');
       return;
     }
   
-    try {
-      const authToken = await AsyncStorage.getItem("authToken");
-      const postData = new FormData();
-      postData.append("postedBy", postedBy); // Check if postedBy is set correctly
-      postData.append("text", content);      // Check if content is set correctly
-      if (img) {
-        const uriParts = img.split(".");
-        const fileType = uriParts[uriParts.length - 1];
-        postData.append("image", {
-          uri: img,
-          name: `photo.${fileType}`,
-          type: `image/${fileType}`,
-        });
-      }
+    const pickerResult = await ImagePicker.launchImageLibraryAsync();
+    if (!pickerResult.canceled && pickerResult.assets.length > 0) {
+      console.log("Selected image URI:", pickerResult.assets[0].uri); // Log the URI of the selected image
   
-      const response = await axios.post(
-        "https://levelartbackend-production.up.railway.app/posts/create-post",
-        postData,
-        {
-          headers: {
-            Authorization: `Bearer ${authToken}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-  
-      setContent("");
-      setImage(null);
-      console.log("Post created successfully:", response.data);
-    } catch (error) {
-      console.log("Error creating post:", error);
+      setImage(pickerResult.assets[0].uri);
+    } else {
+      console.log("Image picking cancelled or no image selected");
     }
   };
-  
   
 
-  const handleImagePicker = async () => {
+  const handlePostSubmit = async () => {
+    setIsLoading(true);
+  
     try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        console.log('Permission to access photo library denied');
-        return;
+      const authToken = await AsyncStorage.getItem('authToken');
+      const decodedToken = jwt_decode(authToken);
+      const userId = decodedToken.sub; // Extract user ID from the token
+  
+      const formData = new FormData();
+      formData.append('text', content);
+      formData.append('postedBy', userId); // Include the user ID as the "postedBy" field
+  
+      if (image) {
+        const localUri = image;
+        const filename = localUri.split('/').pop();
+        const match = /\.(\w+)$/.exec(filename);
+        const type = match ? `image/${match[1]}` : 'image';
+        formData.append('img', { uri: localUri, name: filename, type }); // Change 'image' to 'img'
       }
   
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 1,
+      const response = await axios.post('http://192.168.178.40:3000/posts/create-post', formData, {
+      headers: {
+          'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${authToken}`,
+        },
       });
-      console.log("result:", result);
-      if (!result.canceled && result.assets?.length > 0) {
-        const selectedImageUri = result.assets[0].uri;
-        console.log('Selected image URI:', selectedImageUri);
-        setImage(selectedImageUri);
-      } else {
-        console.log('Image selection cancelled or no image selected');
-      }
-      
+      AsyncStorage.setItem("postId", response.data._id);
+
+      console.log('Post created successfully:', response.data._id);
+      // Reset form fields
+      setContent('');
+      setImage(null);
+
     } catch (error) {
-      console.log('Error selecting image:', error);
+      console.error('Error creating post:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
-  
-  
-  
-  
-  
-  if (isLoading) {
-    return (
-      <SafeAreaView style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" color="black" />
-      </SafeAreaView>
-    );
-  }
 
   return (
-    <SafeAreaView style={{ padding: 10 }}>
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          gap: 10,
-          padding: 10,
-        }}
-      >
-        <Image
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: 20,
-            resizeMode: "contain",
-          }}
-          source={{
-            uri: "https://cdn-icons-png.flaticon.com/128/149/149071.png",
-          }}
-        />
-      </View>
-
-      <View style={{ flexDirection: "row", marginLeft: 10 }}>
-        <TextInput
-          value={content}
-          onChangeText={(text) => setContent(text)}
-          placeholderTextColor={"black"}
-          placeholder="Type your message..."
-          multiline
-        />
-      </View>
-
+    <View style={{ flex: 1, padding: 20 }}>
+      <TextInput
+        value={content}
+        onChangeText={setContent}
+        placeholder="What's on your mind?"
+        multiline
+        style={{ marginBottom: 20, borderBottomWidth: 1, borderColor: '#ccc' }}
+      />
       <TouchableOpacity onPress={handleImagePicker}>
-        <View style={{ marginTop: 10, alignItems: 'center' }}>
+        <View style={{ marginBottom: 20 }}>
           <Text>Add Image</Text>
         </View>
       </TouchableOpacity>
-
-      {img && (
-        <Image
-          source={{ uri: img }}
-          style={{ width: 200, height: 200, marginTop: 10 }}
-        />
-      )}
-
-      <View style={{ marginTop: 20 }} />
-
-      <Button onPress={handlePostSubmit} title="Share Post" />
-    </SafeAreaView>
+      {image && <Image source={{ uri: image }} style={{ width: 200, height: 200, marginBottom: 20 }} />}
+      <Button title="Share Post" onPress={handlePostSubmit} disabled={isLoading} />
+      {isLoading && <ActivityIndicator />}
+    </View>
   );
 };
 

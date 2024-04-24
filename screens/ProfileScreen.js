@@ -26,7 +26,7 @@ const ProfileScreen = () => {
 
         // Make a GET request to fetch profile information
         const profileResponse = await axios.get(
-          `https://levelartbackend-production.up.railway.app/followers/${userId}/followers`,
+          `https://localhost:3000/followers/${userId}/followers`,
           {
             headers: {
               Authorization: `Bearer ${authToken}`,
@@ -41,7 +41,7 @@ const ProfileScreen = () => {
 
         // Fetch user posts
         const postsResponse = await axios.get(
-          `https://levelartbackend-production.up.railway.app/posts/user/${userId}`,
+          `https://localhost:3000/posts/user/${userId}`,
           {
             headers: {
               Authorization: `Bearer ${authToken}`,
@@ -52,7 +52,7 @@ const ProfileScreen = () => {
 
         // Fetch user replies
         const repliesResponse = await axios.get(
-          `https://levelartbackend-production.up.railway.app/posts/user/${userId}/replies`,
+          `https://localhost:3000/posts/user/${userId}/replies`,
           {
             headers: {
               Authorization: `Bearer ${authToken}`,
