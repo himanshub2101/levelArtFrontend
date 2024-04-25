@@ -33,13 +33,15 @@ const HomeScreen = ({ route }) => {
         const userId = decodedToken.sub;
         setUserId(userId);
         setUserIdSet(true);
+        fetchPosts(); // Fetch posts whenever userId changes
       } catch (error) {
         console.error("Error fetching user data:", error);
       }
     };
-    
+  
     fetchUserData();
-  }, [route]);
+  }, [userId]); // Trigger useEffect whenever userId changes
+  
   
   useEffect(() => {
     if (userIdSet) {
@@ -64,15 +66,15 @@ const HomeScreen = ({ route }) => {
         "Content-Type": "application/json",
       };
 
-      const responseFollowings = await axios.get(`http:/local:3000/followers/${userId}/following`, { headers });
+      const responseFollowings = await axios.get(`https://levelart.up.railway.app/followers/${userId}/following`, { headers });
       const followings = responseFollowings.data;
 console.log("responseFollowings:",responseFollowings)
       const postsPromises = followings.map(async (followingId) => {
-        const response = await axios.get(`http:/local:3000/user/${followingId}`, { headers });
+        const response = await axios.get(`https://levelart.up.railway.app/user/${followingId}`, { headers });
         return response.data;
       });
 
-      const responseUserPosts = await axios.get(`http:/local:3000/posts/user/${userId}`, { headers });
+      const responseUserPosts = await axios.get(`https://levelart.up.railway.app/posts/user/${userId}`, { headers });
       const userPosts = responseUserPosts.data;
       const postsResponses = await Promise.all(postsPromises);
 
@@ -91,7 +93,7 @@ console.log("responseFollowings:",responseFollowings)
 
       console.log("token:",token)
       // Send a POST request to your backend API endpoint for liking the post
-      const response = await axios.post(`http:/local:3000//posts/${postId}/like`, null, {
+      const response = await axios.post(`https://levelart.up.railway.app/posts/${postId}/like`, null, {
         headers: {
           Authorization: `Bearer ${token}`, // Replace YOUR_AUTH_TOKEN with the actual authentication token
         },
