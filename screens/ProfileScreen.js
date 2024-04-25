@@ -26,7 +26,7 @@ const ProfileScreen = () => {
 
         // Make a GET request to fetch profile information
         const profileResponse = await axios.get(
-          `https://localhost:3000/followers/${userId}/followers`,
+          `https://192.168.1.14:3000/followers/${userId}/followers`,
           {
             headers: {
               Authorization: `Bearer ${authToken}`,
@@ -41,7 +41,7 @@ const ProfileScreen = () => {
 
         // Fetch user posts
         const postsResponse = await axios.get(
-          `https://localhost:3000/posts/user/${userId}`,
+          `https://192.168.1.14:3000/posts/user/${userId}`,
           {
             headers: {
               Authorization: `Bearer ${authToken}`,
@@ -52,7 +52,7 @@ const ProfileScreen = () => {
 
         // Fetch user replies
         const repliesResponse = await axios.get(
-          `https://localhost:3000/posts/user/${userId}/replies`,
+          `https://192.168.1.14:3000/posts/user/${userId}/replies`,
           {
             headers: {
               Authorization: `Bearer ${authToken}`,
