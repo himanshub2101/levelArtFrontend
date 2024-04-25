@@ -54,6 +54,7 @@ const ThreadsScreen = () => {
           'Authorization': `Bearer ${authToken}`,
         },
       });
+      
       AsyncStorage.setItem("postId", response.data._id);
 
       console.log('Post created successfully:', response.data._id);
