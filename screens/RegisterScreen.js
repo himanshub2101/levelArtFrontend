@@ -96,7 +96,7 @@ const RegisterScreen = () => {
     };
   
   
-    axios.post("http://192.168.1.14:3000/users/register", user)
+    axios.post("https://levelart.up.railway.app/users/register", user)
     .then((response) => {
         console.log(response);
         Alert.alert(
