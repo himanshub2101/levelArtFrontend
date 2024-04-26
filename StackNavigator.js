@@ -16,6 +16,11 @@ import AsyncStorage from "@react-native-async-storage/async-storage"; // Import 
 import SettingsScreen from "./screens/SettingsScreen";
 import AccountsCenterScreen from "./screens/AccountCenter";
 import SearchScreen from "./screens/SearchScreen";
+import ArtistForm from "./components/forms/artist"
+import ProductionForm from "./components/forms/production"
+import VisitorsForm from "./components/forms/visitors"
+
+
 const   StackNavigator = () => {
   const Stack = createNativeStackNavigator();
   const Tab = createBottomTabNavigator();
@@ -122,6 +127,7 @@ const   StackNavigator = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator>
+   
         <Stack.Screen
           name="Login"
           component={LoginScreen}
@@ -131,7 +137,23 @@ const   StackNavigator = () => {
           name="Register"
           component={RegisterScreen}
           options={{ headerShown: false }}
+        /> 
+          <Stack.Screen
+        name="Artist"
+        component={ArtistForm}
+        options={{ headerShown: false }}
+      />
+         <Stack.Screen
+          name="Visitors"
+          component={VisitorsForm}
+          options={{ headerShown: false }}
         />
+         <Stack.Screen
+          name="Production"
+          component={ProductionForm}
+          options={{ headerShown: false }}
+        />
+        
         <Stack.Screen
           name="Main"
           component={BottomTabs}
