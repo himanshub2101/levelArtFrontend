@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import {StyleSheet,Text,View,SafeAreaView,Pressable,TextInput,KeyboardAvoidingView,Image,Alert,ScrollView,Platform,} from "react-native";
+import { StyleSheet, Text, View, SafeAreaView, Pressable, TextInput, KeyboardAvoidingView, Image, Alert, ScrollView, Platform, Picker } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { AntDesign } from "@expo/vector-icons";
 import { Ionicons } from "@expo/vector-icons";
@@ -14,6 +14,7 @@ const RegisterScreen = () => {
   const [password, setPassword] = useState("");
   const [confirmpassword, setConfirmPassword] = useState("");
   const [phonenumber, setPhoneNumber] = useState("");
+  const [userType, setUserType] = useState("artist"); // Default user type is artist
   const [nameError, setNameError] = useState({ isError: false, message: "" });
   const [emailError, setEmailError] = useState({ isError: false, message: "" });
   const [passwordError, setPasswordError] = useState({ isError: false, message: "" });
@@ -21,7 +22,19 @@ const RegisterScreen = () => {
   const [phoneNumberError, setPhoneNumberError] = useState({ isError: false, message: "" });
 
   const navigation = useNavigation();
-
+  
+  const renderForm = () => {
+    switch (userType) {
+      case 'artist':
+        return <ArtistForm />;
+      case 'visitors':
+        return <VisitorsForm />;
+      case 'production':
+        return <ProductionForm />;
+      default:
+        return null;
+    }
+  };
   const handleNameChange = (text) => {
     setUserName(text);
     if (nameError.isError) {
@@ -84,32 +97,32 @@ const RegisterScreen = () => {
       setPhoneNumberError({ isError: true, message: "Please enter your phone number" });
       hasError = true;
     }
-  
+
     if (hasError) return;
-  
+
     const user = {
       username: username,
       email: email,
       password: password,
       confirmpassword: confirmpassword,
-      phonenumber: phonenumber
+      phonenumber: phonenumber,
+      userType: userType // Include userType in the user object
     };
-  
-  
+
     axios.post("https://levelart.up.railway.app/users/register", user)
-    .then((response) => {
+      .then((response) => {
         console.log(response);
         Alert.alert(
           "Registration successful",
           "You have been registered successfully"
         );
-  
-        console.log("userID from Register Screen",response.data._id)
-        
-         AsyncStorage.clear();
+
+        console.log("userID from Register Screen", response.data._id)
+
+        AsyncStorage.clear();
 
         AsyncStorage.setItem("userId", response.data._id);
-  
+
         navigation.navigate("Login")
         setUserName("");
         setEmail("");
@@ -120,19 +133,19 @@ const RegisterScreen = () => {
       .catch((error) => {
         console.log("error.response:", error.response)
         console.log("error.response.data:", error.response.data)
-  
-        if ( error.response.data.message  === "Email is already registred") {
+
+        if (error.response.data.message === "Email is already registred") {
           // If email is already registered, display an error message
           setEmailError({ isError: true, message: "This email is already registered. Please use a different email address." });
-        } 
+        }
         else if (error.response && error.response.data && error.response.data.error === "Username already registered") {
           // If username is already registered, display an error message
           setNameError({ isError: true, message: "This username is already registered. Please use a different username." });
-        } 
+        }
         else if (error.response.data.message === "Phone number is already registred") {
           // If phone number is already registered, display an error message
           setPhoneNumberError({ isError: true, message: "This phone number is already registered. Please use a different phone number." });
-        } 
+        }
         else {
           // Handle other errors
           Alert.alert(
@@ -143,7 +156,6 @@ const RegisterScreen = () => {
         console.log("error", error);
       });
   };
-  
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
@@ -249,6 +261,26 @@ const RegisterScreen = () => {
             </View>
             {phoneNumberError.isError && <Text style={styles.errorMessage}>{phoneNumberError.message}(</Text>}
 
+            {/* User Type Dropdown */}
+            <View style={styles.dropdownContainer}>
+              <MaterialIcons
+                style={styles.inputIcon}
+                name="person"
+                size={24}
+                color="gray"
+              />
+              <Picker
+                selectedValue={userType}
+                style={styles.dropdown}
+                onValueChange={(itemValue, itemIndex) =>
+                  setUserType(itemValue)
+                }>
+                <Picker.Item label="Artist" value="artist" />
+                <Picker.Item label="Visitors" value="visitors" />
+                <Picker.Item label="Production" value="production" />
+              </Picker>
+            </View>
+
             <Pressable
               onPress={handleRegister}
               style={styles.button}
@@ -330,6 +362,32 @@ const styles = StyleSheet.create({
     marginTop: 5,
     width: "100%",
   },
+ // Add the following styles to the existing styles object in your RegisterScreen component:
+
+dropdownContainer: {
+  flexDirection: "row",
+  alignItems: "center",
+  borderWidth: 1,
+  borderColor: "#D0D0D0",
+  borderRadius: 5,
+  paddingHorizontal: 10,
+  marginVertical: 10,
+  width: "100%",
+  height: 50, // Adjust the height of the dropdown container
+  overflow: "hidden", // Hide overflowing content
+},
+dropdownIcon: {
+  position: "absolute",
+  right: 10,
+},
+dropdown: {
+  flex: 1,
+  color: "gray",
+  fontSize: 16,
+  paddingHorizontal: 10,
+  borderWidth: 0,
+},
+
 });
 
 export default RegisterScreen;
