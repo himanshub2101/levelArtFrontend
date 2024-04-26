@@ -15,6 +15,7 @@ import ProfileScreen from "./screens/ProfileScreen";
 import AsyncStorage from "@react-native-async-storage/async-storage"; // Import AsyncStorage
 import SettingsScreen from "./screens/SettingsScreen";
 import AccountsCenterScreen from "./screens/AccountCenter";
+import SearchScreen from "./screens/SearchScreen";
 const   StackNavigator = () => {
   const Stack = createNativeStackNavigator();
   const Tab = createBottomTabNavigator();
@@ -52,7 +53,22 @@ const   StackNavigator = () => {
               ),
           }}
         />
-
+<Tab.Screen
+  name="Search"
+  component={SearchScreen}
+  options={{
+    tabBarLabel: "Search",
+    tabBarLabelStyle: { color: "black" },
+    headerShown: false,
+    tabBarIcon: ({ focused }) => (
+      focused ? (
+        <Ionicons name="search" size={24} color="black" />
+      ) : (
+        <Ionicons name="search-outline" size={24} color="black" />
+      )
+    ),
+  }}
+/>
         <Tab.Screen
           name="Thread"
           component={ThreadsScreen}
