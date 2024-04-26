@@ -7,7 +7,9 @@ import { useNavigation } from "@react-navigation/native";
 import logo from "../assets/logo.png";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
+import ArtistForm from '../components/forms/artist';
+import VisitorsForm from '../components/forms/visitors';
+import ProductionForm from '../components/forms/production';
 const RegisterScreen = () => {
   const [username, setUserName] = useState("");
   const [email, setEmail] = useState("");
@@ -122,7 +124,21 @@ const RegisterScreen = () => {
         AsyncStorage.clear();
 
         AsyncStorage.setItem("userId", response.data._id);
-
+        switch (userType) {
+          case 'artist':
+            navigation.navigate('Artist');
+            break;
+          case 'visitors':
+            navigation.navigate('Visitors');
+            break;
+          case 'production':
+            navigation.navigate('Production');
+            break;
+          default:
+            // Navigate to a default screen if user type is not recognized
+            navigation.navigate('DefaultScreen');
+            break;
+        }
         navigation.navigate("Login")
         setUserName("");
         setEmail("");
