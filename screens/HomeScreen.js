@@ -154,38 +154,60 @@ const HomeScreen = ({ route }) => {
     }
   };
 
-  const renderPost = (post) => {
-    return (
-      <View key={`${post._id}-${post.postedBy}`} style={styles.post}>
-        <View style={styles.postHeader}>
-          <Text style={styles.username}>{post.username}</Text>
-          {/* Display user ID */}
-          <Text style={styles.userId}>{post.userId}</Text>
+  // Render the action buttons for each post
+const renderPost = (post) => {
+  return (
+    <View key={`${post._id}-${post.postedBy}`} style={styles.post}>
+      <View style={styles.postHeader}>
+        <Text style={styles.username}>{post.username}</Text>
+        {/* Display user ID */}
+        <Text style={styles.userId}>{post.userId}</Text>
+      </View>
+      <View style={styles.postContent}>
+        <Text>{post.text}</Text>
+        {post.img && (
+          <Image source={{ uri: post.img }} style={styles.postImage} />
+        )}
+        <View style={styles.actionButtons}>
+          {/* Like button */}
+          <TouchableOpacity onPress={() => handleLike(post._id)} style={styles.actionButton}>
+            <AntDesign name={post.liked ? "heart" : "hearto"} size={30} color={post.liked ? "red" : "black"} />
+            {/* Display number of likes */}
+            <Text>{post.likes.length} likes</Text>
+          </TouchableOpacity>
+          {/* Comment button */}
+          <TouchableOpacity onPress={toggleCommentInput} style={styles.actionButton}>
+            <FontAwesome name="comment-o" size={30} color="black" />
+          </TouchableOpacity>
+          {/* Share button */}
+          <TouchableOpacity onPress={() => handleShare(post._id)} style={styles.actionButton}>
+            <Ionicons name="share-social" size={30} color="black" />
+          </TouchableOpacity>
+          {/* Save button */}
+          <TouchableOpacity onPress={() => handleSavePost(post._id)} style={styles.saveButton}>
+            <Image source={savedPosts.includes(post._id) ? require('../assets/bookmark.png') : require('../assets/save-instagram.png')} style={styles.bookmarkIcon} />
+          </TouchableOpacity>
         </View>
-        <View style={styles.postContent}>
-          <Text>{post.text}</Text>
-          {post.img && (
-            <Image source={{ uri: post.img }} style={styles.postImage} />
-          )}
-          <View style={styles.actionButtons}>
-            <TouchableOpacity onPress={() => handleLike(post._id)} style={styles.actionButton}>
-              <AntDesign name={post.liked ? "heart" : "hearto"} size={30} color={post.liked ? "red" : "black"} />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={toggleCommentInput} style={styles.actionButton}>
-              <FontAwesome name="comment-o" size={30} color="black" />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleShare(post._id)} style={styles.actionButton}>
-              <Ionicons name="share-social" size={30} color="black" />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleSavePost(post._id)} style={styles.saveButton}>
-              <Image source={savedPosts.includes(post._id) ? require('../assets/bookmark.png') : require('../assets/save-instagram.png')} style={styles.bookmarkIcon} />
+        {/* Comment input field */}
+        {showCommentInput && (
+          <View style={styles.commentContainer}>
+            <TextInput
+              style={styles.commentInput}
+              placeholder="Add a comment..."
+              value={commentText}
+              onChangeText={setCommentText}
+              onSubmitEditing={() => handleComment(post._id)}
+            />
+            <TouchableOpacity onPress={() => handleComment(post._id)}>
+              <Text style={styles.commentButton}></Text>
             </TouchableOpacity>
           </View>
-          
-        </View>
+        )}
       </View>
-    );
-  };
+    </View>
+  );
+};
+
 
   return (
     <ScrollView
