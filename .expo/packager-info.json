@@ -2,7 +2,8 @@
   "webpackServerPort": null,
   "expoServerPort": 19000,
   "packagerPort": 19000,
-  "expoServerNgrokUrl": "https://sa-7vs.mrfrek19.levelartfrontend.exp.direct",
-  "packagerNgrokUrl": "https://sa-7vs.mrfrek19.levelartfrontend.exp.direct",
-  "ngrokPid": 12548
+  "expoServerNgrokUrl": "https://sa-7vs.anonymous.levelartfrontend.exp.direct",
+  "packagerNgrokUrl": "https://sa-7vs.anonymous.levelartfrontend.exp.direct",
+  "ngrokPid": 3212,
+  "packagerPid": null
 }
