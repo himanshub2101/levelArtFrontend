@@ -14,9 +14,6 @@
     "assetBundlePatterns": [
       "**/*"
     ],
-    "permissions": {
-      "mediaLibrary": true
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.mrfrek19.levelart"
