@@ -2,7 +2,7 @@
   "expo": {
     "name": "levelart",
     "slug": "levelart",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/logo.png",
     "userInterfaceStyle": "dark",
@@ -14,9 +14,6 @@
     "assetBundlePatterns": [
       "**/*"
     ],
-    "permissions": {
-      "mediaLibrary": true
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.mrfrek19.levelart"
