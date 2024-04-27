@@ -1,15 +1,1 @@
-{
-  "webpackServerPort": 19006,
-  "expoServerPort": 19000,
-  "packagerPort": 19000,
-<<<<<<< HEAD
-  "expoServerNgrokUrl": "https://sa-7vs.mrfrek19.levelartfrontend.exp.direct",
-  "packagerNgrokUrl": "https://sa-7vs.mrfrek19.levelartfrontend.exp.direct",
-  "ngrokPid": 10408
-=======
-  "expoServerNgrokUrl": "https://sa-7vs.anonymous.levelartfrontend.exp.direct",
-  "packagerNgrokUrl": "https://sa-7vs.anonymous.levelartfrontend.exp.direct",
-  "ngrokPid": 3212,
-  "packagerPid": null
->>>>>>> 4320446f2a4c6e8861f1ab9833d7a3d7576a57cd
-}
+{}

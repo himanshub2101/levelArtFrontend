@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-import React from 'react';
-import { View, Button, StyleSheet } from 'react-native';
-=======
 import { StyleSheet, Text, View } from "react-native";
 import React, { useEffect, useState } from "react";
 import { NavigationContainer } from "@react-navigation/native";
@@ -25,40 +21,140 @@ import ProductionForm from "./components/forms/production"
 import VisitorsForm from "./components/forms/visitors"
 import ImagesScreen from "./screens/ImagesScreen";
 import TweetsScreen from "./screens/TweetsScreen";
->>>>>>> 94bfc2da6ed82b8ba3b550f6e237fad1927194fb
 
-const HomeScreen1 = ({ navigation }) => {
+
+const   StackNavigator = () => {
+  const Stack = createNativeStackNavigator();
+  const Tab = createBottomTabNavigator();
+  
+  function BottomTabs({route }) {
+    const [authToken, setAuthToken] = useState(null);
+
+    useEffect(() => {
+      const getAuthToken = async () => {
+        try {
+          const token = await AsyncStorage.getItem("authToken", token) ;
+          console.log("token:", token)
+          setAuthToken(token);
+        } catch (error) {
+          console.log("Error retrieving authToken from AsyncStorage:", error);
+        }
+      };
+  
+      getAuthToken();
+    }, []);
+    return (
+      <Tab.Navigator>
+        <Tab.Screen
+          name="Home"
+          component={HomeScreen}
+          options={{
+            tabBarLabel: "Home",
+            tabBarLabelStyle: { color: "black" },
+            headerShown: false,
+            tabBarIcon: ({ focused }) =>
+              focused ? (
+                <Entypo name="home" size={24} color="black" />
+              ) : (
+                <AntDesign name="home" size={24} color="black" />
+              ),
+          }}
+        />
+<Tab.Screen
+  name="Search"
+  component={SearchScreen}
+  options={{
+    tabBarLabel: "Search",
+    tabBarLabelStyle: { color: "black" },
+    headerShown: false,
+    tabBarIcon: ({ focused }) => (
+      focused ? (
+        <Ionicons name="search" size={24} color="black" />
+      ) : (
+        <Ionicons name="search-outline" size={24} color="black" />
+      )
+    ),
+  }}
+/>
+        <Tab.Screen
+          name="Thread"
+          component={ThreadsScreen}
+          options={{
+            tabBarLabel: "Create",
+            tabBarLabelStyle: { color: "black" },
+            headerShown: false,
+            tabBarIcon: ({ focused }) =>
+              focused ? (
+                <Ionicons name="create" size={24} color="black" />
+              ) : (
+                <Ionicons name="create-outline" size={24} color="black" />
+              ),
+          }}
+        />
+
+        <Tab.Screen
+          name="Activity"
+          component={ActivityScreen}
+          options={{
+            tabBarLabel: "Activity",
+            tabBarLabelStyle: { color: "black" },
+            headerShown: false,
+            tabBarIcon: ({ focused }) =>
+              focused ? (
+                <AntDesign name="heart" size={24} color="black" />
+              ) : (
+                <AntDesign name="hearto" size={24} color="black" />
+              ),
+          }}
+        />
+
+        <Tab.Screen
+          name="Profile"
+          component={ProfileScreen}
+          options={{
+            tabBarLabel: "Profile",
+            tabBarLabelStyle: { color: "black" },
+            headerShown: false,
+            tabBarIcon: ({ focused }) =>
+              focused ? (
+                <Ionicons name="person" size={24} color="black" />
+              ) : (
+                <Ionicons name="person-outline" size={24} color="black" />
+              ),
+          }}
+        />
+      </Tab.Navigator>
+    );
+  }
   return (
-    <View style={styles.container}>
-      <View style={styles.buttonContainer}>
-        <Button
-          title="Artist"
-          onPress={() => navigation.navigate('Artist')}
-          color="black" // Set button color to black
-          style={styles.button} // Apply custom button styles
+    <NavigationContainer>
+      <Stack.Navigator>
+   
+        <Stack.Screen
+          name="Login"
+          component={LoginScreen}
+          options={{ headerShown: false }}
         />
-      </View>
-      <View style={styles.space} /> {/* Add space */}
-      <View style={styles.buttonContainer}>
-        <Button
-          title="Visitors"
-          onPress={() => navigation.navigate('Visitors')}
-          color="black" // Set button color to black
-          style={styles.button} // Apply custom button styles
+        <Stack.Screen
+          name="Register"
+          component={RegisterScreen}
+          options={{ headerShown: false }}
+        /> 
+          <Stack.Screen
+        name="Artist"
+        component={ArtistForm}
+        options={{ headerShown: false }}
+      />
+         <Stack.Screen
+          name="Visitors"
+          component={VisitorsForm}
+          options={{ headerShown: false }}
         />
-      </View>
-      <View style={styles.space} /> {/* Add space */}
-      <View style={styles.buttonContainer}>
-        <Button
-          title="Production"
-          onPress={() => navigation.navigate('Production')}
-          color="black" // Set button color to black
-          style={styles.button} // Apply custom button styles
+         <Stack.Screen
+          name="Production"
+          component={ProductionForm}
+          options={{ headerShown: false }}
         />
-<<<<<<< HEAD
-      </View>
-    </View>
-=======
         
         <Stack.Screen
           name="Main"
@@ -90,28 +186,9 @@ const HomeScreen1 = ({ navigation }) => {
         /> */}
       </Stack.Navigator>
     </NavigationContainer>
->>>>>>> 94bfc2da6ed82b8ba3b550f6e237fad1927194fb
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  buttonContainer: {
-    width: '30%', // Set the width of the button container to 80% of the screen width
-    borderRadius: 10, // Add border radius to create rounded corners
-    overflow: 'hidden', // Hide overflow to ensure border radius is applied correctly
-    marginBottom: 10, // Add margin bottom to the button container for spacing
-  },
-  button: {
-    flex: 1, // Set button to flex 1 to fill the container
-  },
-  space: {
-    height: 10, // Set the height of the space between buttons
-  },
-});
+export default StackNavigator;
 
-export default HomeScreen1;
+const styles = StyleSheet.create({});

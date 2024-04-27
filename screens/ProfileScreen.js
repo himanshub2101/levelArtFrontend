@@ -1,68 +1,25 @@
 import React, { useEffect, useState, useContext } from "react";
-import { StyleSheet, Text, View, Image, Pressable, FlatList, Dimensions, Button, TextInput } from "react-native";
-import axios from "axios";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { StyleSheet, View, Text, TextInput, Button, Image, TouchableOpacity } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { UserType } from '../UserContext';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import ImagesScreen from './ImagesScreen'; // Import the ImagesScreen component
+import TweetsScreen from './TweetsScreen'; // Import the TweetsScreen component
 
 const Tab = createMaterialTopTabNavigator();
 
-const TweetsScreen = ({ posts }) => {
-  const renderPostItem = ({ item }) => (
-    <View style={styles.postWrapper}>
-      <Text style={styles.postText}>{item.text}</Text>
-    </View>
-  );
-
-  return (
-    <View style={styles.container}>
-      <FlatList
-        data={posts}
-        renderItem={renderPostItem}
-        keyExtractor={(item) => item._id}
-        contentContainerStyle={styles.postsList}
-        numColumns={3} // Adjust the number of columns
-      />
-    </View>
-  );
-};
-
-const ImagesScreen = ({ posts }) => {
-  const renderPostItem = ({ item }) => (
-    <View style={styles.postWrapper}>
-      <Image
-        style={styles.postImage}
-        source={{
-          uri: item.img || "https://via.placeholder.com/150",
-        }}
-      />
-    </View>
-  );
-
-  return (
-    <View style={styles.container}>
-      <FlatList
-        data={posts}
-        renderItem={renderPostItem}
-        keyExtractor={(item) => item._id}
-        contentContainerStyle={styles.postsList}
-        numColumns={3} // Adjust the number of columns
-      />
-    </View>
-  );
-};
-
 const ProfileScreen = () => {
+  const navigation = useNavigation();
+  const { userId, setUserId } = useContext(UserType);
   const [user, setUser] = useState("");
   const [followers, setFollowers] = useState(0);
   const [followings, setFollowings] = useState(0);
   const [posts, setPosts] = useState([]);
   const [replies, setReplies] = useState([]);
   const [bio, setBio] = useState("");
-  const navigation = useNavigation();
-  const { userId, setUserId } = useContext(UserType);
 
   useEffect(() => {
     const fetchProfile = async (userId) => {
@@ -80,7 +37,6 @@ const ProfileScreen = () => {
 
         const { user, followers, followings, bio } = profileResponse.data;
         setUser(user);
-        setPosts(posts?.length || 0);
         setFollowers(followers?.length || 0);
         setFollowings(followings?.length || 0);
         setBio(bio || "");
@@ -148,50 +104,56 @@ const ProfileScreen = () => {
     }
   };
 
+  // Filter posts based on whether they contain images
+  const imagePosts = posts.filter(post => post.img); // Filter posts with images
+  const tweetPosts = posts.filter(post => !post.img); // Filter posts without images
+
   return (
     <View style={styles.container}>
       <View style={styles.profileHeader}>
-        <View style={styles.headerLeft}>
+        <View style={styles.userInfo}>
           <Image
             style={styles.profileImage}
             source={{
               uri: "https://cdn-icons-png.flaticon.com/128/149/149071.png",
             }}
           />
-          <View style={styles.headerInfo}>
+          <View style={styles.userStats}>
             <Text style={styles.username}>{user}</Text>
-            <Text style={styles.userId}>{userId}</Text>
+            <Text style={styles.userStatsText}>{posts.length} posts</Text>
+            <Text style={styles.userStatsText}>{followers} followers</Text>
+            <Text style={styles.userStatsText}>{followings} following</Text>
           </View>
         </View>
-        <Pressable style={styles.settingsIcon} onPress={handleSettingsPress}>
+        <TouchableOpacity style={styles.settingsIcon} onPress={handleSettingsPress}>
           <Icon name="settings-outline" size={30} color="#333" />
-        </Pressable>
+        </TouchableOpacity>
       </View>
-      <View style={styles.profileCounts}>
-        <Text style={styles.postsText}>{posts} posts</Text>
-        <Text style={styles.followText}>{followers} followers</Text>
-        <Text style={styles.followText}>{followings} following</Text>
+
+      <View style={styles.profileInfo}>
+        <View style={styles.bioContainer}>
+          <View style={styles.bioTextContainer}>
+            <Text style={styles.bioLabel}>Bio:</Text>
+            <TextInput
+              style={styles.bioInput}
+              placeholder="Edit bio"
+              onChangeText={setBio}
+              value={bio}
+            />
+            <Button title="Update Bio" onPress={updateBio} />
+          </View>
+        </View>
       </View>
-      <View style={styles.bioTextContainer}>
-        <Text style={styles.bioText}>{bio}</Text>
-        <TextInput
-          style={styles.bioInput}
-          placeholder="Edit bio"
-          onChangeText={setBio}
-          value={bio}
-        />
-        <Button title="Update Bio" onPress={updateBio} color="#black" />
-      </View>
+
       <Tab.Navigator>
-        <Tab.Screen name="Images">
-          {() => <ImagesScreen posts={posts} />}
-        </Tab.Screen>
-        <Tab.Screen name="Tweets">
-          {() => <TweetsScreen posts={posts} />}
-        </Tab.Screen>
+        <Tab.Screen name="Images" component={() => <ImagesScreen posts={imagePosts} />} />
+        <Tab.Screen name="Tweets" component={() => <TweetsScreen posts={tweetPosts} />} />
       </Tab.Navigator>
-      <View style={styles.logoutContainer}>
-        <Button title="Logout" onPress={logout} color="black" />
+
+      <View style={styles.buttonsContainer}>
+        <TouchableOpacity style={styles.button} onPress={logout}>
+          <Text style={styles.buttonText}>Logout</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -200,86 +162,82 @@ const ProfileScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: 10,
   },
   profileHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
-  },
-  headerLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  headerInfo: {
-    marginLeft: 10,
+    marginBottom: 10,
+    paddingHorizontal: 15,
   },
   username: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "bold",
   },
   userId: {
-    fontSize: 14,
+    fontSize: 16,
     color: "gray",
-  },
-  profileImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
   },
   settingsIcon: {
-    padding: 5,
+    marginLeft: 'auto',
   },
-  profileCounts: {
+  profileInfo: {
+    flexDirection: "column",
+    marginBottom: 20,
+  },
+  bioContainer: {
     flexDirection: "row",
-    justifyContent: "space-around",
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
+    alignItems: "center",
+    marginBottom: 10,
   },
-  postsText: {
-    fontWeight: "bold",
-  },
-  followText: {
-    color: "gray",
+  profileImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    resizeMode: "cover",
   },
   bioTextContainer: {
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
+    flex: 1,
+    marginLeft: 10,
   },
-  bioText: {
-    marginBottom: 10,
+  bioLabel: {
+    fontWeight: "bold",
+    marginBottom: 5,
   },
   bioInput: {
     marginBottom: 10,
+    padding: 8,
     borderWidth: 1,
-    borderColor: "#ccc",
-    padding: 5,
+    borderColor: "gray",
+    borderRadius: 5,
   },
-  logoutContainer: {
-    padding: 20,
-  },
-  postsList: {
-    flexGrow: 1,
-    paddingVertical: 10,
-  },
-  postWrapper: {
-    flex: 1,
-    justifyContent: "center",
+  buttonsContainer: {
+    flexDirection: "row",
     alignItems: "center",
-    margin: 2,
+    justifyContent: "center",
+    marginTop: 10,
   },
-  postText: {
-    fontSize: 16,
+  button: {
+    padding: 10,
+    borderWidth: 1,
+    borderRadius: 5,
+    backgroundColor: "black",
   },
-  postImage: {
-    width: Dimensions.get("window").width / 3 - 4,
-    height: Dimensions.get("window").width / 3 - 4,
-    resizeMode: "cover",
+  buttonText: {
+    color: "white",
+    fontWeight: "bold",
+  },
+  userInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  userStats: {
+    marginLeft: 10,
+  },
+  userStatsText: {
+    color: "gray",
+    fontSize: 15,
   },
 });
 
