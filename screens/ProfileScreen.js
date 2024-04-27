@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from "react";
-import { StyleSheet, Text, View, Image, Pressable, FlatList, ScrollView, Dimensions, TextInput, Button } from "react-native";
+import { StyleSheet, Text, View, Image, Pressable, FlatList, Dimensions, Button, TextInput } from "react-native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
@@ -151,41 +151,37 @@ const ProfileScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.profileHeader}>
-        <View>
-          <Text style={styles.username}>{user}</Text>
-          <Text style={styles.userId}>{userId}</Text>
-        </View>
-        <Pressable style={styles.settingsIcon} onPress={handleSettingsPress}>
-          <Icon name="settings-outline" size={30} color="#333" />
-        </Pressable>
-        <Text style={styles.postsText}>{posts} followers </Text>
-        <Text style={styles.followText}>{followers} followers </Text>
-        <Text style={styles.followText}>{followings} followings</Text>
-      </View>
-      <View style={styles.profileInfo}>
-        <View style={styles.bioContainer}>
-          
+        <View style={styles.headerLeft}>
           <Image
             style={styles.profileImage}
             source={{
               uri: "https://cdn-icons-png.flaticon.com/128/149/149071.png",
             }}
           />
-         
-         </View>
-        
+          <View style={styles.headerInfo}>
+            <Text style={styles.username}>{user}</Text>
+            <Text style={styles.userId}>{userId}</Text>
+          </View>
+        </View>
+        <Pressable style={styles.settingsIcon} onPress={handleSettingsPress}>
+          <Icon name="settings-outline" size={30} color="#333" />
+        </Pressable>
+      </View>
+      <View style={styles.profileCounts}>
+        <Text style={styles.postsText}>{posts} posts</Text>
+        <Text style={styles.followText}>{followers} followers</Text>
+        <Text style={styles.followText}>{followings} following</Text>
       </View>
       <View style={styles.bioTextContainer}>
-            {/* <TextInput
-              style={styles.bioInput}
-              placeholder=""
-              onChangeText={setBio}
-              value={bio}
-            /> */}
-            <Button title="Edit Profile" onPress={updateBio} color="black" />
-            
-          </View>
-
+        <Text style={styles.bioText}>{bio}</Text>
+        <TextInput
+          style={styles.bioInput}
+          placeholder="Edit bio"
+          onChangeText={setBio}
+          value={bio}
+        />
+        <Button title="Update Bio" onPress={updateBio} color="#black" />
+      </View>
       <Tab.Navigator>
         <Tab.Screen name="Images">
           {() => <ImagesScreen posts={posts} />}
@@ -194,11 +190,8 @@ const ProfileScreen = () => {
           {() => <TweetsScreen posts={posts} />}
         </Tab.Screen>
       </Tab.Navigator>
-
-      <View style={styles.buttonsContainer}>
-        <Pressable style={styles.button} onPress={logout}>
-          <Text style={styles.buttonText}>Logout</Text>
-        </Pressable>
+      <View style={styles.logoutContainer}>
+        <Button title="Logout" onPress={logout} color="black" />
       </View>
     </View>
   );
@@ -208,102 +201,85 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  profileInfo: {
-    marginBottom: 20,
-    padding: 15,
-  },
   profileHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 10,
-    padding: 15,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#ccc",
+  },
+  headerLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  headerInfo: {
+    marginLeft: 10,
   },
   username: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "bold",
   },
   userId: {
-    fontSize: 16,
+    fontSize: 14,
     color: "gray",
   },
-  // bioContainer: {
-  //   flexDirection: "row",
-  //   alignItems: "center",
-  //   marginBottom: 10,
-  // },
   profileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    resizeMode: "cover",
+    width: 80,
+    height: 80,
+    borderRadius: 40,
   },
-  bioTextContainer: {
-    borderRadius: 20, // Adjust the border radius as needed
-    overflow: 'hidden', // Ensure the border radius is applied correctly
-    width:"40%",
-    padding: 20,
-    justifyContent:"center",
-    alignSelf: "",
-
+  settingsIcon: {
+    padding: 5,
   },
-  bioInput: {
-    marginBottom: 10,
-    
-    borderWidth: 1,
-    backgroundColor:"black",
-    borderColor: "grey",
-    borderRadius: 5,
-   
+  profileCounts: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#ccc",
+  },
+  postsText: {
+    fontWeight: "bold",
   },
   followText: {
     color: "gray",
-    fontSize: 15,
+  },
+  bioTextContainer: {
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#ccc",
+  },
+  bioText: {
+    marginBottom: 10,
+  },
+  bioInput: {
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    padding: 5,
+  },
+  logoutContainer: {
+    padding: 20,
   },
   postsList: {
     flexGrow: 1,
-    padding: 15,
+    paddingVertical: 10,
   },
   postWrapper: {
-    flex:1,
-    flexDirection: 'grid',
-    justifyContent: 'space-between',
-    marginBottom: 50,
-    alignItems: "left",
-  },
-  postText: {
-    fontSize: 16,
-    textAlign: "center",
-  },
-  postImage: {
-    width: Dimensions.get("window").width / 4,
-    height: Dimensions.get("window").width / 4,
-    resizeMode: "cover",
-  },
-  buttonsContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 10,
-    paddingBottom: 10,
-    padding: 50,
-  },
-  button: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: 10,
-    borderWidth: 1,
-    borderRadius: 1,
-    backgroundColor:"black",
+    margin: 2,
   },
-  buttonText: {
-    textAlign: "center",
-    fontWeight: "bold",
-    color:"white",
+  postText: {
+    fontSize: 16,
   },
-  settingsIcon: {
-    marginLeft: 'auto',
+  postImage: {
+    width: Dimensions.get("window").width / 3 - 4,
+    height: Dimensions.get("window").width / 3 - 4,
+    resizeMode: "cover",
   },
 });
 
