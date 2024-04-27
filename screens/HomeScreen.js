@@ -1,5 +1,5 @@
 import React, { useEffect, useContext, useState, useCallback } from "react";
-import { StyleSheet, Text, View, ScrollView, Image, RefreshControl, TouchableOpacity, Modal, Alert, TextInput, Dimensions } from "react-native";
+import { StyleSheet, Text, View, ScrollView, Image, RefreshControl, TouchableOpacity, Modal, Alert, TextInput } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import jwt_decode from "jwt-decode";
 import axios from "axios";
@@ -158,9 +158,9 @@ const HomeScreen = ({ route }) => {
     return (
       <View key={`${post._id}-${post.postedBy}`} style={styles.post}>
         <View style={styles.postHeader}>
-        <Text style={styles.username}>{post.username}</Text>
-        {/* Display user ID */}
-        <Text style={styles.userId}>{post.userId}</Text>
+          <Text style={styles.username}>{post.username}</Text>
+          {/* Display user ID */}
+          <Text style={styles.userId}>{post.userId}</Text>
         </View>
         <View style={styles.postContent}>
           <Text>{post.text}</Text>
@@ -195,7 +195,12 @@ const HomeScreen = ({ route }) => {
       {/* Logo */}
       <View style={styles.logoContainer}>
         <Image source={logo} style={styles.logo} />
+        {/* Chat Icon */}
+        <TouchableOpacity style={styles.chatIconContainer} onPress={() => setShowChat(!showChat)}>
+          <Ionicons name="chatbubbles" size={30} color="black" />
+        </TouchableOpacity>
       </View>
+      <View style={styles.horizontalLine}></View> {/* Add horizontal line */}
 
       {/* Post Container */}
       <View style={styles.postContainer}>
@@ -245,13 +250,16 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
   },
   logoContainer: {
-    alignItems: "center",
-    marginTop: 40,
-    marginBottom: 10,
+    flexDirection: "row", // Align logo and chat icon horizontally
+    alignItems: "center", // Center logo and chat icon vertically
+    justifyContent: "space-between", // Ensure space between logo and chat icon
+    marginTop: 50,
+    marginBottom: 0,
+    paddingHorizontal: 180, // Add horizontal padding for spacing
   },
   logo: {
     width: 50, // Adjust width as needed
-    height: 50, // Adjust height as needed
+    height: 80, // Adjust height as needed
     resizeMode: "contain", // Ensure logo fits within its container
   },
   postContainer: {
@@ -291,7 +299,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between", // Align buttons at the ends
     paddingHorizontal: 10,
-    paddingVertical:15, // Adjust the vertical padding as needed for spacing
+    paddingVertical: 15, // Adjust the vertical padding as needed for spacing
     borderTopWidth: 1,
     borderColor: "#ddd",
   },
@@ -321,6 +329,17 @@ const styles = StyleSheet.create({
   bookmarkIcon: {
     width: 30,
     height: 30,
+  },
+  chatIconContainer: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    zIndex: 1, // Ensure the chat icon appears above other elements
+  },
+  horizontalLine: {
+    borderBottomColor: '#ccc', // Adjust color as needed
+    borderBottomWidth: 1,
+    marginHorizontal: 10, // Adjust horizontal margin as needed
   },
 });
 

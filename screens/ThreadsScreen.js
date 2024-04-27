@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { StyleSheet, Text, View, Image, SafeAreaView, TextInput, Button, ActivityIndicator, TouchableOpacity } from "react-native";
+import { Ionicons } from '@expo/vector-icons'; // Import Ionicons for the image icon
 import * as ImagePicker from 'expo-image-picker'; // Import Expo's ImagePicker module
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -48,7 +49,7 @@ const ThreadsScreen = () => {
         formData.append('img', { uri: localUri, name: filename, type }); // Change 'image' to 'img'
       }
   
-      const response = await axios.post('http://192.168.178.40:3000/posts/create-post', formData, {
+      const response = await axios.post('https://levelart.up.railway.app/posts/create-post', formData, {
       headers: {
           'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${authToken}`,
@@ -70,21 +71,29 @@ const ThreadsScreen = () => {
   };
 
   return (
-    <View style={{ flex: 1, padding: 20 }}>
-      <TextInput
-        value={content}
-        onChangeText={setContent}
-        placeholder="What's on your mind?"
-        multiline
-        style={{ marginBottom: 20, borderBottomWidth: 1, borderColor: '#ccc' }}
-      />
-      <TouchableOpacity onPress={handleImagePicker}>
-        <View style={{ marginBottom: 20 }}>
-          <Text>Add Image</Text>
-        </View>
-      </TouchableOpacity>
-      {image && <Image source={{ uri: image }} style={{ width: 200, height: 200, marginBottom: 20 }} />}
-      <Button title="Share Post" onPress={handlePostSubmit} disabled={isLoading} />
+    <View style={{ flex: 1, padding: 50 }}>
+      <View style={styles.inputContainer}>
+        <TextInput
+          value={content}
+          onChangeText={setContent}
+          placeholder="What's on your mind?"
+          multiline
+          style={styles.input}
+        />
+        <TouchableOpacity onPress={handleImagePicker}>
+          <Ionicons name="image" size={24} color="black" />
+        </TouchableOpacity>
+      </View>
+      {image && <Image source={{ uri: image }} style={styles.image} />}
+      <View style={styles.button}>
+  <Button
+    title="Share Post"
+    onPress={handlePostSubmit}
+    disabled={isLoading}
+    color={"black"}
+  />
+</View>
+
       {isLoading && <ActivityIndicator />}
     </View>
   );
@@ -92,4 +101,35 @@ const ThreadsScreen = () => {
 
 export default ThreadsScreen;
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  inputContainer: {
+    //flexDirection: 'row',
+    justifyContent: 'left',
+    alignItems: 'left',
+    marginBottom: 50,
+    paddingTop: 80,
+    borderBottomWidth: 1,
+    borderColor: '#ccc',
+
+  },
+  input: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: 'lightgray',
+    borderRadius: 25,
+    padding:50,
+    
+  },
+  image: {
+    width: 200,
+    height: 200,
+    marginBottom: 20,
+  },
+  button: {
+    borderRadius: 10, // Adjust the border radius as needed
+    overflow: 'hidden', // Ensure the border radius is applied correctly
+    width:"40%",
+    justifyContent:"center",
+    alignSelf: "center",
+  },
+});
