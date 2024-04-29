@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from "react";
-import { StyleSheet, View, Text, TextInput, Button, Image, TouchableOpacity } from "react-native";
+import { StyleSheet, View, ScrollView, Text, TextInput, Button, Image, TouchableOpacity } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { UserType } from '../UserContext';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -26,40 +26,45 @@ const ProfileScreen = () => {
       try {
         const authToken = await AsyncStorage.getItem("authToken");
 
-        const profileResponse = await axios.get(
-          `https://levelart.up.railway.app/followers/${userId}/followers`,
-          {
+        const profileResponse = await axios.get(`https://levelart.up.railway.app/followers/${userId}/followers`, {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        }).catch((error) => {
+          console.error("Error fetching profile:", error);
+        });
+
+        if (profileResponse) {
+          const { user, followers, followings, bio } = profileResponse.data;
+          setUser(user);
+          setFollowers(followers?.length || 0);
+          setFollowings(followings?.length || 0);
+          setBio(bio || "");
+
+          const postsResponse = await axios.get(`https://levelart.up.railway.app/posts/user/${userId}`, {
             headers: {
               Authorization: `Bearer ${authToken}`,
             },
+          }).catch((error) => {
+            console.error("Error fetching posts:", error);
+          });
+
+          if (postsResponse) {
+            setPosts(postsResponse.data);
           }
-        );
 
-        const { user, followers, followings, bio } = profileResponse.data;
-        setUser(user);
-        setFollowers(followers?.length || 0);
-        setFollowings(followings?.length || 0);
-        setBio(bio || "");
-
-        const postsResponse = await axios.get(
-          `https://levelart.up.railway.app/posts/user/${userId}`,
-          {
+          const repliesResponse = await axios.get(`https://levelart.up.railway.app/posts/user/${userId}/replies`, {
             headers: {
               Authorization: `Bearer ${authToken}`,
             },
-          }
-        );
-        setPosts(postsResponse.data);
+          }).catch((error) => {
+            console.error("Error fetching replies:", error);
+          });
 
-        const repliesResponse = await axios.get(
-          `https://levelart.up.railway.app/posts/user/${userId}/replies`,
-          {
-            headers: {
-              Authorization: `Bearer ${authToken}`,
-            },
+          if (repliesResponse) {
+            setReplies(repliesResponse.data);
           }
-        );
-        setReplies(repliesResponse.data);
+        }
       } catch (error) {
         console.error("Error fetching profile:", error);
       }
@@ -137,12 +142,6 @@ const ProfileScreen = () => {
           <View style={styles.bioContainer}>
             <View style={styles.bioTextContainer}>
               <Text style={styles.bioLabel}>Bio:</Text>
-              {/* <TextInput
-                style={styles.bioInput}
-                placeholder="Edit bio"
-                onChangeText={setBio}
-                value={bio}
-              /> */}
               <TouchableOpacity style={styles.updateBioButton} onPress={updateBio}>
                 <Text style={styles.updateBioButtonText}>Update Bio</Text>
               </TouchableOpacity>
@@ -150,6 +149,7 @@ const ProfileScreen = () => {
           </View>
         </View>
 
+        {/* Render the Tab.Navigator outside the ScrollView */}
         <Tab.Navigator>
           <Tab.Screen name="Posts" component={() => <ImagesScreen posts={imagePosts} />} />
           <Tab.Screen name="Tweets" component={() => <TweetsScreen posts={tweetPosts} />} />
@@ -202,23 +202,14 @@ const styles = StyleSheet.create({
     resizeMode: "cover",
   },
   bioTextContainer: {
-  flex: 1,
-  alignItems: 'flex-start',
-  padding: 10,
-  //margin:50,
-},
-
+    flex: 1,
+    alignItems: 'flex-start',
+    padding: 10,
+  },
   bioLabel: {
     fontWeight: "bold",
     marginBottom: 5,
   },
-  // bioInput: {
-  //   marginBottom: 10,
-  //   padding: 8,
-  //   borderWidth: 1,
-  //   borderColor: "gray",
-  //   borderRadius: 5,
-  // },
   updateBioButton: {
     backgroundColor: "black",
     paddingVertical: 8,
@@ -233,13 +224,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 10,
+    marginTop: 20,
   },
   button: {
-    padding: 10,
-    borderWidth: 1,
+    backgroundColor: "red",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
     borderRadius: 5,
-    backgroundColor: "black",
   },
   buttonText: {
     color: "white",
@@ -250,17 +241,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   userStats: {
-    marginLeft: 10,
+    marginLeft: 20,
   },
   statsContainer: {
     flexDirection: "row",
     marginTop: 5,
   },
   statsText: {
-    color: "gray",
     marginRight: 10,
   },
 });
-
 
 export default ProfileScreen;

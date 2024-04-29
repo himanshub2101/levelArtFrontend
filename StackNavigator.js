@@ -19,8 +19,8 @@ import SearchScreen from "./screens/SearchScreen";
 import ArtistForm from "./components/forms/artist"
 import ProductionForm from "./components/forms/production"
 import VisitorsForm from "./components/forms/visitors"
-// import ImagesScreen from "./screens/ImagesScreen";
-// import TweetsScreen from "./screens/TweetsScreen";
+import ImagesScreen from "./screens/ImagesScreen";
+import TweetsScreen from "./screens/TweetsScreen";
 
 
 const   StackNavigator = () => {
@@ -174,7 +174,7 @@ const   StackNavigator = () => {
           options={{ headerShown: false }}
         />
 
-{/* <Stack.Screen
+<Stack.Screen
           name="ImageScreen"
           component={ImagesScreen}
           options={{ headerShown: false }}
@@ -183,7 +183,7 @@ const   StackNavigator = () => {
           name="TweetsScreen"
           component={TweetsScreen}
           options={{ headerShown: false }}
-        /> */}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );
