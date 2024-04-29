@@ -1,14 +1,25 @@
 import React, { useEffect, useContext, useState, useCallback } from "react";
-import { StyleSheet, Text, View, ScrollView, Image, RefreshControl, TouchableOpacity, Modal, TextInput } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  Image,
+  RefreshControl,
+  TouchableOpacity,
+  SafeAreaView,
+  Modal,
+  TextInput,
+} from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import jwt_decode from "jwt-decode";
 import axios from "axios";
 import { AntDesign, FontAwesome, Ionicons } from "@expo/vector-icons";
-import logo from '../assets/logo.png';
+import logo from "../assets/logo.png";
 import { UserType } from "../UserContext";
 import MessageContainer from "../components/messageContainer"; // Import MessageContainer component
 // Import the necessary icon
-import { Feather } from "@expo/vector-icons";
+// import { Feather } from "@expo/vector-icons";
 
 const HomeScreen = ({ route }) => {
   const { userId, setUserId } = useContext(UserType);
@@ -19,7 +30,7 @@ const HomeScreen = ({ route }) => {
   const [selectedPost, setSelectedPost] = useState(null); // State to store the selected post
   const [modalVisible, setModalVisible] = useState(false); // State to manage the modal visibility
   const [showCommentInput, setShowCommentInput] = useState(false); // State to manage comment input visibility
-  const [commentText, setCommentText] = useState(''); // State to store the comment text
+  const [commentText, setCommentText] = useState(""); // State to store the comment text
   const [savedPosts, setSavedPosts] = useState([]); // State to store saved posts
 
   useEffect(() => {
@@ -65,25 +76,46 @@ const HomeScreen = ({ route }) => {
     try {
       const token = await AsyncStorage.getItem("authToken");
       const decodedToken = jwt_decode(token);
+      const userId = decodedToken.sub;
+      console.log("UserData", decodedToken);
+      console.log("userId", userId);
+
       const headers = {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       };
 
-      const responseFollowings = await axios.get(`http://192.168.1.14:3000/followers/${userId}/following`, { headers });
+      const responseFollowings = await axios.get(
+        `https://levelart.up.railway.app/followers/${userId}/following`,
+        { headers }
+      );
       const followings = responseFollowings.data;
+
       const postsPromises = followings.map(async (followingId) => {
-        const response = await axios.get(`http://192.168.1.14:3000/user/${followingId}`, { headers });
+        const response = await axios.get(
+          `https://levelart.up.railway.app/user/${followingId}`,
+          { headers }
+        );
         return response.data;
       });
 
-      const responseUserPosts = await axios.get(`http://192.168.1.14:3000/posts/user/${userId}`, { headers });
+      const responseUserPosts = await axios.get(
+        `https://levelart.up.railway.app/posts/user/${userId}`,
+        { headers }
+      );
       const userPosts = responseUserPosts.data;
+
       const postsResponses = await Promise.all(postsPromises);
 
-      const allPosts = postsResponses.reduce((accumulator, currentPosts) => accumulator.concat(currentPosts), []);
+      const allPosts = postsResponses.reduce(
+        (accumulator, currentPosts) => accumulator.concat(currentPosts),
+        []
+      );
 
-      const combinedPosts = [...allPosts, ...userPosts].map(post => ({ ...post, liked: post.likes.includes(userId) }));
+      const combinedPosts = [...allPosts, ...userPosts].map((post) => ({
+        ...post,
+        liked: post.likes.includes(userId),
+      }));
       setPosts(combinedPosts);
     } catch (error) {
       console.log("Error fetching posts", error);
@@ -93,14 +125,26 @@ const HomeScreen = ({ route }) => {
   const handleLike = async (postId) => {
     try {
       const token = await AsyncStorage.getItem("authToken");
-      const response = await axios.post(`http://192.168.1.14:3000/posts/${postId}/like`, null, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setPosts(prevPosts =>
-        prevPosts.map(post =>
-          post._id === postId ? { ...post, liked: !post.liked, likes: post.liked ? post.likes.filter(id => id !== userId) : [...post.likes, userId] } : post
+      const response = await axios.post(
+        `https://levelart.up.railway.app/posts/${postId}/like`,
+        null,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post._id === postId
+            ? {
+                ...post,
+                liked: !post.liked,
+                likes: post.liked
+                  ? post.likes.filter((id) => id !== userId)
+                  : [...post.likes, userId],
+              }
+            : post
         )
       );
       console.log("Post liked/unliked successfully:", response.data.message);
@@ -126,7 +170,7 @@ const HomeScreen = ({ route }) => {
   const handleComment = async (postId) => {
     try {
       console.log("Comment:", commentText);
-      setCommentText('');
+      setCommentText("");
       setShowCommentInput(false);
     } catch (error) {
       console.error("Error posting the comment", error);
@@ -140,7 +184,10 @@ const HomeScreen = ({ route }) => {
         ? savedPosts.filter((savedPostId) => savedPostId !== postId)
         : [...savedPosts, postId];
       setSavedPosts(updatedSavedPosts);
-      await AsyncStorage.setItem("savedPosts", JSON.stringify(updatedSavedPosts));
+      await AsyncStorage.setItem(
+        "savedPosts",
+        JSON.stringify(updatedSavedPosts)
+      );
     } catch (error) {
       console.error("Error saving post:", error);
     }
@@ -151,36 +198,68 @@ const HomeScreen = ({ route }) => {
       <View key={`${post.postedBy}-${post.postId}`} style={styles.post}>
         <View style={styles.postHeader}>
           {post.user && post.user.profilePicture && (
-            <Image source={{ uri: post.user.profilePicture }} style={styles.profilePicture} />
+            <Image
+              source={{ uri: post.user.profilePicture }}
+              style={styles.profilePicture}
+            />
           )}
-          <Text style={styles.username}>{post.postedBy}</Text>
+          <Text style={styles.username}>{post.username}</Text>
           <TouchableOpacity onPress={() => openOptionsModal(post)}>
             <Ionicons name="ellipsis-vertical" size={24} color="black" />
           </TouchableOpacity>
         </View>
         <View style={styles.postContent}>
-          {post.text && <Text>{post.text}</Text>}
+          {post.text && <Text style={styles.captions}>{post.text}</Text>}
           {post.img && (
             <Image source={{ uri: post.img }} style={styles.postImage} />
           )}
           <View style={styles.actionButtons}>
-            <TouchableOpacity onPress={() => handleLike(post._id)} style={styles.actionButton}>
-              <AntDesign name={post.liked ? "heart" : "hearto"} size={30} color={post.liked ? "red" : "black"} />
+          <View style={styles.actionLeftButtons}>
+            <TouchableOpacity
+              onPress={() => handleLike(post._id)}
+              style={styles.actionButton}
+            >
+              <AntDesign
+                name={post.liked ? "heart" : "hearto"}
+                size={30}
+                color={post.liked ? "red" : "black"}
+              />
             </TouchableOpacity>
-            <TouchableOpacity onPress={toggleCommentInput} style={styles.actionButton}>
+            <TouchableOpacity
+              onPress={toggleCommentInput}
+              style={styles.actionButton}
+            >
               <FontAwesome name="comment-o" size={30} color="black" />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleSavePost(post._id)} style={styles.saveButton}>
-            <Feather name={savedPosts.includes(post._id) ? "bookmark" : "bookmark-outline"} size={30} color={savedPosts.includes(post._id) ? "#000" : "#8e8e8e"} />
-          </TouchableOpacity>
+            
 
             <TouchableOpacity onPress={() => {}} style={styles.actionButton}>
               <Ionicons name="paper-plane-outline" size={30} color="black" />
             </TouchableOpacity>
+            </View>
+            <View>
+            <TouchableOpacity
+              onPress={() => handleSavePost(post._id)}
+              style={styles.saveButton}
+            >
+              <Ionicons
+                name={
+                  savedPosts.includes(post._id)
+                    ? "bookmark"
+                    : "bookmark-outline"
+                }
+                size={30}
+                color={savedPosts.includes(post._id) ? "#000" : "#8e8e8e"}
+              />
+
+            </TouchableOpacity>
+            </View>
           </View>
           <View style={styles.socialInfo}>
             <Text style={styles.likes}>{post.likes?.length || 0} likes</Text>
-            <Text style={styles.comments}>{post.comments?.length || 0} comments</Text>
+            <Text style={styles.comments}>
+             View all {post.comments?.length || 0} comments
+            </Text>
           </View>
           {showCommentInput && (
             <View style={styles.commentInputContainer}>
@@ -190,7 +269,10 @@ const HomeScreen = ({ route }) => {
                 value={commentText}
                 onChangeText={setCommentText}
               />
-              <TouchableOpacity onPress={() => handleComment(post._id)} style={styles.postCommentButton}>
+              <TouchableOpacity
+                onPress={() => handleComment(post._id)}
+                style={styles.postCommentButton}
+              >
                 <Text style={styles.postCommentButtonText}>Post</Text>
               </TouchableOpacity>
             </View>
@@ -201,48 +283,58 @@ const HomeScreen = ({ route }) => {
   };
 
   return (
-    <ScrollView
-      style={styles.container}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-    >
-      <Image style={styles.logo} source={logo} />
-      <TouchableOpacity style={styles.chatIconContainer} onPress={() => setShowChat(!showChat)}>
-        <Ionicons name="chatbubble-outline" size={24} color="black" />
-      </TouchableOpacity>
-      <View style={styles.postContainer}>
-        {posts.map((post) => renderPost(post))}
+    <SafeAreaView style={styles.container}>
+    
+    <View style={styles.navBar}>
+        <Image style={styles.logo} source={logo} />
+        <TouchableOpacity
+          style={styles.chatIconContainer}
+          // onPress={handleChatIconPress} 
+        >
+          <Ionicons name="chatbubble-outline" size={24} color="black" />
+        </TouchableOpacity>
       </View>
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={closeOptionsModal}
+      <ScrollView
+        style={styles.scrollView}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <TouchableOpacity onPress={closeOptionsModal}>
-              <Text style={styles.closeModalText}>Close</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => {}}>
-              <Text>saved</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => {}}>
-              <Text>Share</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => {}}>
-              <Text>Unfollow</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => {}}>
-              <Text>handleImagePicker</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => {}}>
-              <Text>About this account</Text>
-            </TouchableOpacity>
-          </View>
+        <View style={styles.postContainer}>
+          {posts.map((post) => renderPost(post))}
         </View>
-      </Modal>
-      {showChat && <MessageContainer />}
-    </ScrollView>
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={closeOptionsModal}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <TouchableOpacity onPress={closeOptionsModal}>
+                <Text style={styles.closeModalText}>Close</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => {}}>
+                <Text>saved</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => {}}>
+                <Text>Share</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => {}}>
+                <Text>Unfollow</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => {}}>
+                <Text>handleImagePicker</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => {}}>
+                <Text>About this account</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+        {showChat && <MessageContainer />}
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
@@ -250,18 +342,30 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "white",
+
+  },
+  scrollView: {
+    flex: 1,
+    marginTop:5,
+  },
+  navBar: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 10,
+    // paddingVertical: 8,
+    marginTop:30,
+    borderBottomWidth: 1,
+    borderColor: "#ddd",
   },
   logo: {
     width: 80,
     height: 60,
-    top: 10,
-    right: 0,
     resizeMode: "contain",
+    marginRight:'auto',
   },
   chatIconContainer: {
-    position: "absolute",
-    top: 20,
-    right: 10,
+    marginLeft: 'auto', 
   },
   postContainer: {
     paddingHorizontal: 5,
@@ -293,24 +397,40 @@ const styles = StyleSheet.create({
     minHeight: 100,
     paddingVertical: 10,
   },
+  captions:{
+  paddingHorizontal:10,
+  fontWeight:'500',
+  
+  },
   postImage: {
     width: "100%",
     height: 550,
   },
+
   actionButtons: {
-    flexDirection: "row",
-    paddingHorizontal: 5,
-    paddingVertical: 10,
-    borderTopWidth: 1,
-    borderColor: "#ddd",
+  flexDirection:"row",
+  justifyContent:"space-between",
+  paddingHorizontal: 10,
+  paddingVertical: 10,
+  // marginHorizontal: 5,
   },
-  actionButton: {
-    marginHorizontal: 5,
+  actionLeftButtons:{
+    flexDirection: "row",
+    gap:20,
+    // borderTopWidth: 1,
+    // borderColor: "#ddd",
+  },
+  socialInfo:{
+   paddingHorizontal:10,
   },
   likes: {
     fontWeight: "bold",
-    paddingHorizontal: 10,
     marginBottom: 5,
+  },
+  comments:{
+    fontWeight: "bold",
+    color:'#000',
+    opacity:0.5,
   },
   modalContainer: {
     flex: 1,
