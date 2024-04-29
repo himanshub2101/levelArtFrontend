@@ -23,6 +23,8 @@ const LoginScreen = () => {
   // Define state variables
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [emailError, setEmailError] = useState({ isError: false, message: "" });
+  const [passwordError, setPasswordError] = useState({ isError: false, message: "" });
   const navigation = useNavigation();
 
   // Effect hook to check login status on component mount
@@ -44,14 +46,39 @@ const LoginScreen = () => {
     checkLoginStatus();
   }, []);
 
+  const handleEmailChange = (text) => {
+    const normalizedEmail = text.trim().toLowerCase();
 
+    setEmail(normalizedEmail);
+    
+    if (emailError.isError) {
+      setEmailError({ isError: false, message: "" });
+    }
+  };
+
+  const handlePasswordChange = (text) => {
+    setPassword(text);
+    if (passwordError.isError) {
+      setPasswordError({ isError: false, message: "" });
+    }
+  };
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert("Email and password are required");
-      return;
+    // if (!email || !password) {
+    //   Alert.alert("Email and password are required");
+    //   return;
+    // }
+    let hasError = false;
+    if (!email) {
+      setEmailError({ isError: true, message: "Please enter your email" });
+      hasError = true;
     }
-  
+    if (!password) {
+      setPasswordError({ isError: true, message: "Please enter your password" });
+      hasError = true;
+    }
+    if (hasError) return;
+
     try {
       const user = {
         email: email,
@@ -166,7 +193,7 @@ const LoginScreen = () => {
             />
             <TextInput
               value={email}
-              onChangeText={(text) => setEmail(text)}
+              onChangeText={handleEmailChange}
               placeholderTextColor={"gray"}
               style={{
                 color: "gray",
@@ -176,7 +203,9 @@ const LoginScreen = () => {
               }}
               placeholder="enter your Email"
             />
+
           </View>
+             {emailError.isError && <Text style={styles.errorMessage}>{emailError.message}</Text>}
 
           <View style={{ marginTop: 30 }}>
             <View
@@ -199,7 +228,7 @@ const LoginScreen = () => {
               <TextInput
                 secureTextEntry={true}
                 value={password}
-                onChangeText={(text) => setPassword(text)}
+                onChangeText={handlePasswordChange}
                 placeholderTextColor={"gray"}
                 style={{
                   color: "gray",
@@ -210,6 +239,7 @@ const LoginScreen = () => {
                 placeholder="enter your Password"
               />
             </View>
+               {passwordError.isError && <Text style={styles.errorMessage}>{passwordError.message}</Text>}
           </View>
 
           <View
@@ -273,4 +303,10 @@ const LoginScreen = () => {
 export default LoginScreen;
 
 // Define styles for the LoginScreen component
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  errorMessage: {
+    color: "red",
+    // marginTop: 5,
+    width: "100%",
+  },
+});
