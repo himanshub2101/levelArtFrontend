@@ -47,7 +47,9 @@ const RegisterScreen = () => {
   };
 
   const handleEmailChange = (text) => {
-    setEmail(text);
+    const normalizedEmail = text.trim().toLowerCase();
+
+    setEmail(normalizedEmail);
     if (emailError.isError) {
       setEmailError({ isError: false, message: "" });
     }
@@ -191,7 +193,7 @@ const RegisterScreen = () => {
             </View>
 
             <Text style={styles.title}>Register to Your Account</Text>
-
+            <View style={{marginVertical:10}}>
             <View style={styles.inputContainer}>
               <Ionicons
                 style={styles.inputIcon}
@@ -208,7 +210,9 @@ const RegisterScreen = () => {
               />
             </View>
             {nameError.isError && <Text style={styles.errorMessage}>{nameError.message}</Text>}
-
+            </View>
+           
+            <View style={{marginVertical:10}}>
             <View style={styles.inputContainer}>
               <MaterialIcons
                 style={styles.inputIcon}
@@ -225,7 +229,9 @@ const RegisterScreen = () => {
               />
             </View>
             {emailError.isError && <Text style={styles.errorMessage}>{emailError.message}</Text>}
-
+            </View>
+           
+            <View style={{marginVertical:10}}>
             <View style={styles.inputContainer}>
               <AntDesign
                 style={styles.inputIcon}
@@ -243,7 +249,9 @@ const RegisterScreen = () => {
               />
             </View>
             {passwordError.isError && <Text style={styles.errorMessage}>{passwordError.message}</Text>}
-
+            </View>
+            
+            <View style={{marginVertical:10}}>
             <View style={styles.inputContainer}>
               <AntDesign
                 style={styles.inputIcon}
@@ -261,7 +269,8 @@ const RegisterScreen = () => {
               />
             </View>
             {confirmPasswordError.isError && <Text style={styles.errorMessage}>{confirmPasswordError.message}</Text>}
-
+             </View>
+             <View style={{marginVertical:10}}>
             <View style={styles.inputContainer}>
               <MaterialIcons
                 style={styles.inputIcon}
@@ -273,12 +282,13 @@ const RegisterScreen = () => {
                 value={phonenumber}
                 onChangeText={handlePhoneNumberChange}
                 placeholderTextColor="gray"
+                keyboardType="numeric"
                 style={styles.input}
                 placeholder="Enter your Phone Number"
               />
             </View>
             {phoneNumberError.isError && <Text style={styles.errorMessage}>{phoneNumberError.message}(</Text>}
-
+</View>
             {/* User Type Dropdown */}
             <View style={styles.dropdownContainer}>
               <MaterialIcons
@@ -348,7 +358,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     paddingVertical: 5,
     paddingHorizontal: 10,
-    marginVertical: 10,
+    // marginVertical: 10,
     width: "100%",
   },
   inputIcon: {
@@ -377,7 +387,7 @@ const styles = StyleSheet.create({
   },
   errorMessage: {
     color: "red",
-    marginTop: 5,
+    // marginTop: 5,
     width: "100%",
   },
  // Add the following styles to the existing styles object in your RegisterScreen component:
