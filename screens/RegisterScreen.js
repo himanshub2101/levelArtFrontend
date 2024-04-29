@@ -285,16 +285,16 @@ const RegisterScreen = () => {
                 size={24}
                 color="gray"
               />
-              <Picker
-                selectedValue={userType}
-                style={styles.dropdown}
-                onValueChange={(itemValue, itemIndex) =>
-                  setUserType(itemValue)
-                }>
-                <Picker.Item label="Artist" value="artist" />
-                <Picker.Item label="Visitors" value="visitors" />
-                <Picker.Item label="Production" value="production" />
-              </Picker>
+<Picker
+  selectedValue={userType}
+  style={styles.dropdown}
+  onValueChange={(itemValue, itemIndex) =>
+    setUserType(itemValue)
+  }>
+  <Picker.Item label="Artist" value="artist" />
+  <Picker.Item label="Visitors" value="visitors" />
+  <Picker.Item label="Production" value="production"/>
+</Picker>
             </View>
 
             <Pressable
