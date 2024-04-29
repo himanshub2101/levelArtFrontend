@@ -1,9 +1,11 @@
 import React, { useState } from "react";
-import { StyleSheet, Text, View, SafeAreaView, Pressable, TextInput, KeyboardAvoidingView, Image, Alert, ScrollView, Platform, Picker } from "react-native";
+import { StyleSheet, Text, View, SafeAreaView, Pressable, TextInput, KeyboardAvoidingView, Image, Alert, ScrollView, Platform } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { AntDesign } from "@expo/vector-icons";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { Picker } from '@react-native-picker/picker';
+
 import logo from "../assets/logo.png";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
