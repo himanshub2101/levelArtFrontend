@@ -182,24 +182,21 @@ const HomeScreen = ({ route }) => {
   const handleSavePost = async (postId) => {
     try {
       const isSaved = savedPosts.includes(postId);
+      // Set the animated message state before updating savedPosts
+      setAnimatedMessage(isSaved ? 'The post has been unsaved successfully!' : 'The post has been saved successfully!');
       const updatedSavedPosts = isSaved
         ? savedPosts.filter((savedPostId) => savedPostId !== postId)
         : [...savedPosts, postId];
-      // Update savedPosts state using the functional form of setSavedPosts
-      setSavedPosts((prevSavedPosts) => updatedSavedPosts);
+      setSavedPosts(updatedSavedPosts);
       await AsyncStorage.setItem(
         "savedPosts",
         JSON.stringify(updatedSavedPosts)
       );
-      // Determine the message based on whether the post is being saved or unsaved
-      const message = isSaved
-        ? "The post has been unsaved successfully!"
-        : "The post has been saved successfully!";
-      setAnimatedMessage(message);
     } catch (error) {
       console.error("Error saving post:", error);
     }
   };
+  
   
 
   const handleAnimationEnd = () => {
