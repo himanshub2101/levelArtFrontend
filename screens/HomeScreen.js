@@ -1,16 +1,5 @@
-import React, { useEffect, useContext, useState, useCallback } from "react";
-import {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  Image,
-  RefreshControl,
-  TouchableOpacity,
-  SafeAreaView,
-  Modal,
-  TextInput,
-} from "react-native";
+import React, { useEffect, useContext, useState, useCallback  } from "react";
+import {StyleSheet,Text,View,ScrollView,Image,RefreshControl,TouchableOpacity,SafeAreaView, Modal,TextInput,Alert} from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import jwt_decode from "jwt-decode";
 import axios from "axios";
@@ -188,15 +177,21 @@ const HomeScreen = ({ route }) => {
         "savedPosts",
         JSON.stringify(updatedSavedPosts)
       );
+      if (isSaved) {
+        Alert.alert("Post Unsaved", "The post has been unsaved successfully!");
+      } else {
+        Alert.alert("Post Saved", "The post has been saved successfully!");
+      }
     } catch (error) {
       console.error("Error saving post:", error);
     }
   };
+  
 
-  const renderPost = (post) => {
+  const renderPost = (post, index) => {
     return (
-      <View key={`${post.postedBy}-${post.postId}`} style={styles.post}>
-        <View style={styles.postHeader}>
+      <View key={post._id} style={styles.post}>
+      <View style={styles.postHeader}>
           {post.user && post.user.profilePicture && (
             <Image
               source={{ uri: post.user.profilePicture }}
@@ -217,24 +212,24 @@ const HomeScreen = ({ route }) => {
           <View style={styles.actionLeftButtons}>
             <TouchableOpacity
               onPress={() => handleLike(post._id)}
-              style={styles.actionButton}
+              style={styles.actionButtons}
             >
               <AntDesign
                 name={post.liked ? "heart" : "hearto"}
-                size={30}
+                size={24}
                 color={post.liked ? "red" : "black"}
               />
             </TouchableOpacity>
             <TouchableOpacity
               onPress={toggleCommentInput}
-              style={styles.actionButton}
+              style={styles.actionButtons}
             >
-              <FontAwesome name="comment-o" size={30} color="black" />
+              <FontAwesome name="comment-o" size={24} color="black" />
             </TouchableOpacity>
             
 
-            <TouchableOpacity onPress={() => {}} style={styles.actionButton}>
-              <Ionicons name="paper-plane-outline" size={30} color="black" />
+            <TouchableOpacity onPress={() => {}} style={styles.actionButtons}>
+              <Ionicons name="paper-plane-outline" size={24} color="black" />
             </TouchableOpacity>
             </View>
             <View>
@@ -248,7 +243,7 @@ const HomeScreen = ({ route }) => {
                     ? "bookmark"
                     : "bookmark-outline"
                 }
-                size={30}
+                size={24}
                 color={savedPosts.includes(post._id) ? "#000" : "#8e8e8e"}
               />
 
@@ -414,11 +409,10 @@ const styles = StyleSheet.create({
   paddingVertical: 10,
   // marginHorizontal: 5,
   },
-  actionLeftButtons:{
+  actionLeftButtons: {
     flexDirection: "row",
-    gap:20,
-    // borderTopWidth: 1,
-    // borderColor: "#ddd",
+    alignItems: "center",
+    gap: 10, // Adjust the gap between icons
   },
   socialInfo:{
    paddingHorizontal:10,
