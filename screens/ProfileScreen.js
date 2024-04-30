@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from "react";
-import { StyleSheet, View, Text, TextInput, Button, Image, TouchableOpacity } from "react-native";
+import { StyleSheet, View, ScrollView, Text, TextInput, Button, Image, TouchableOpacity } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { UserType } from '../UserContext';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -110,51 +110,57 @@ const ProfileScreen = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.profileHeader}>
-        <View style={styles.userInfo}>
-          <Image
-            style={styles.profileImage}
-            source={{
-              uri: "https://cdn-icons-png.flaticon.com/128/149/149071.png",
-            }}
-          />
-          <View style={styles.userStats}>
-            <Text style={styles.username}>{user}</Text>
-            <Text style={styles.userStatsText}>{posts.length} posts</Text>
-            <Text style={styles.userStatsText}>{followers} followers</Text>
-            <Text style={styles.userStatsText}>{followings} following</Text>
-          </View>
-        </View>
-        <TouchableOpacity style={styles.settingsIcon} onPress={handleSettingsPress}>
-          <Icon name="settings-outline" size={30} color="#333" />
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.profileInfo}>
-        <View style={styles.bioContainer}>
-          <View style={styles.bioTextContainer}>
-            <Text style={styles.bioLabel}>Bio:</Text>
-            <TextInput
-              style={styles.bioInput}
-              placeholder="Edit bio"
-              onChangeText={setBio}
-              value={bio}
+      <ScrollView>
+        <View style={styles.profileHeader}>
+          <View style={styles.userInfo}>
+            <Image
+              style={styles.profileImage}
+              source={{
+                uri: "https://cdn-icons-png.flaticon.com/128/149/149071.png",
+              }}
             />
-            <Button title="Update Bio" onPress={updateBio} />
+            <View style={styles.userStats}>
+              <Text style={styles.username}>{user}</Text>
+              <View style={styles.statsContainer}>
+                <Text style={styles.statsText}>{posts.length} posts</Text>
+                <Text style={styles.statsText}>{followers} followers</Text>
+                <Text style={styles.statsText}>{followings} following</Text>
+              </View>
+            </View>
+          </View>
+          <TouchableOpacity style={styles.settingsIcon} onPress={handleSettingsPress}>
+            <Icon name="settings-outline" size={30} color="#333" />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.profileInfo}>
+          <View style={styles.bioContainer}>
+            <View style={styles.bioTextContainer}>
+              <Text style={styles.bioLabel}>Bio:</Text>
+              {/* <TextInput
+                style={styles.bioInput}
+                placeholder="Edit bio"
+                onChangeText={setBio}
+                value={bio}
+              /> */}
+              <TouchableOpacity style={styles.updateBioButton} onPress={updateBio}>
+                <Text style={styles.updateBioButtonText}>Update Bio</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
-      </View>
 
-      <Tab.Navigator>
-        <Tab.Screen name="Images" component={() => <ImagesScreen posts={imagePosts} />} />
-        <Tab.Screen name="Tweets" component={() => <TweetsScreen posts={tweetPosts} />} />
-      </Tab.Navigator>
+        <Tab.Navigator>
+          <Tab.Screen name="Posts" component={() => <ImagesScreen posts={imagePosts} />} />
+          <Tab.Screen name="Tweets" component={() => <TweetsScreen posts={tweetPosts} />} />
+        </Tab.Navigator>
 
-      <View style={styles.buttonsContainer}>
-        <TouchableOpacity style={styles.button} onPress={logout}>
-          <Text style={styles.buttonText}>Logout</Text>
-        </TouchableOpacity>
-      </View>
+        <View style={styles.buttonsContainer}>
+          <TouchableOpacity style={styles.button} onPress={logout}>
+            <Text style={styles.buttonText}>Logout</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </View>
   );
 };
@@ -163,21 +169,19 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 10,
+    backgroundColor: 'white',
   },
   profileHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: 20,
     paddingHorizontal: 15,
+    backgroundColor: 'white',
   },
   username: {
     fontSize: 20,
     fontWeight: "bold",
-  },
-  userId: {
-    fontSize: 16,
-    color: "gray",
   },
   settingsIcon: {
     marginLeft: 'auto',
@@ -198,19 +202,32 @@ const styles = StyleSheet.create({
     resizeMode: "cover",
   },
   bioTextContainer: {
-    flex: 1,
-    marginLeft: 10,
-  },
+  flex: 1,
+  alignItems: 'flex-start',
+  padding: 10,
+  //margin:50,
+},
+
   bioLabel: {
     fontWeight: "bold",
     marginBottom: 5,
   },
-  bioInput: {
-    marginBottom: 10,
-    padding: 8,
-    borderWidth: 1,
-    borderColor: "gray",
+  // bioInput: {
+  //   marginBottom: 10,
+  //   padding: 8,
+  //   borderWidth: 1,
+  //   borderColor: "gray",
+  //   borderRadius: 5,
+  // },
+  updateBioButton: {
+    backgroundColor: "black",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
     borderRadius: 5,
+  },
+  updateBioButtonText: {
+    color: "white",
+    fontWeight: "bold",
   },
   buttonsContainer: {
     flexDirection: "row",
@@ -235,9 +252,13 @@ const styles = StyleSheet.create({
   userStats: {
     marginLeft: 10,
   },
-  userStatsText: {
+  statsContainer: {
+    flexDirection: "row",
+    marginTop: 5,
+  },
+  statsText: {
     color: "gray",
-    fontSize: 15,
+    marginRight: 10,
   },
 });
 

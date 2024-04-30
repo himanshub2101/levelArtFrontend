@@ -61,6 +61,7 @@ const ActivityScreen = () => {
   };
 
   return (
+    <View style={styles.container}>
     <ScrollView style={{ marginTop: 50 }}>
       <View style={{ padding: 10 }}>
         <Text style={{ fontSize: 18, fontWeight: "bold" }}>Activity</Text>
@@ -116,11 +117,19 @@ const ActivityScreen = () => {
           )}
         </View>
       </View>
+      
     </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 65,
+    backgroundColor: 'white',
+  },
   button: {
     flex: 1,
     paddingVertical: 10,

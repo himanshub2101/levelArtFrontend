@@ -129,6 +129,11 @@ const   StackNavigator = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator>
+        <Stack.Screen
+      name="Artist"
+      component={ArtistForm}
+      options={{ headerShown: false }}
+    />
    
         <Stack.Screen
           name="Login"
@@ -140,11 +145,6 @@ const   StackNavigator = () => {
           component={RegisterScreen}
           options={{ headerShown: false }}
         /> 
-          <Stack.Screen
-        name="Artist"
-        component={ArtistForm}
-        options={{ headerShown: false }}
-      />
          <Stack.Screen
           name="Visitors"
           component={VisitorsForm}

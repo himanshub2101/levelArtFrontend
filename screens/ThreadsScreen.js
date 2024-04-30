@@ -71,6 +71,7 @@ const ThreadsScreen = () => {
   };
 
   return (
+    <View style={styles.container}>
     <View style={{ flex: 1, padding: 50 }}>
       <View style={styles.inputContainer}>
         <TextInput
@@ -96,12 +97,19 @@ const ThreadsScreen = () => {
 
       {isLoading && <ActivityIndicator />}
     </View>
+    </View>
   );
 };
 
 export default ThreadsScreen;
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 65,
+    backgroundColor: 'white',
+  },
   inputContainer: {
     //flexDirection: 'row',
     justifyContent: 'left',
