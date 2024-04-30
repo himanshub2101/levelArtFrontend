@@ -20,6 +20,8 @@ import logo from "../assets/logo.png";
 import { UserType } from "../UserContext";
 import MessageContainer from "../components/messageContainer"; // Import MessageContainer component
 import AnimatedMessage from "../components/AnimatedMessage"; // Import AnimatedMessage component
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Feather } from "@expo/vector-icons";
 
 const HomeScreen = ({ route }) => {
   const { userId, setUserId } = useContext(UserType);
@@ -33,7 +35,7 @@ const HomeScreen = ({ route }) => {
   const [commentText, setCommentText] = useState(""); // State to store the comment text
   const [savedPosts, setSavedPosts] = useState([]); // State to store saved posts
   const [showAnimatedMessage, setShowAnimatedMessage] = useState(false);
-  const [animatedMessage, setAnimatedMessage] = useState('');
+  const [animatedMessage, setAnimatedMessage] = useState("");
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -169,11 +171,17 @@ const HomeScreen = ({ route }) => {
     setShowCommentInput(!showCommentInput);
   };
 
-  const handleComment = async (postId) => {
+  const handleComment = () => {
     try {
-      console.log("Comment:", commentText);
+      const newComment = {
+        image: require("../assets/avatar.png"),
+        comment: commentText,
+        timing: "just now",
+        userName: "YourUsername",
+      };
+      setComments((prevComments) => [...prevComments, newComment]);
+
       setCommentText("");
-      setShowCommentInput(false);
     } catch (error) {
       console.error("Error posting the comment", error);
     }
@@ -183,7 +191,11 @@ const HomeScreen = ({ route }) => {
     try {
       const isSaved = savedPosts.includes(postId);
       // Set the animated message state before updating savedPosts
-      setAnimatedMessage(isSaved ? 'The post has been unsaved successfully!' : 'The post has been saved successfully!');
+      setAnimatedMessage(
+        isSaved
+          ? "The post has been unsaved successfully!"
+          : "The post has been saved successfully!"
+      );
       const updatedSavedPosts = isSaved
         ? savedPosts.filter((savedPostId) => savedPostId !== postId)
         : [...savedPosts, postId];
@@ -196,8 +208,6 @@ const HomeScreen = ({ route }) => {
       console.error("Error saving post:", error);
     }
   };
-  
-  
 
   const handleAnimationEnd = () => {
     setShowAnimatedMessage(false);
@@ -207,13 +217,20 @@ const HomeScreen = ({ route }) => {
     return (
       <View key={post._id} style={styles.post}>
         <View style={styles.postHeader}>
-          {post.user && post.user.profilePicture && (
-            <Image
-              source={{ uri: post.user.profilePicture }}
-              style={styles.profilePicture}
-            />
-          )}
-          <Text style={styles.username}>{post.username}</Text>
+          <View style={styles.postUserNameImg}>
+            {post.user && post.user.profilePicture ? (
+              <Image
+                source={{ uri: post.user.profilePicture }}
+                style={styles.profilePicture}
+              />
+            ) : (
+              <Image
+                source={require("../assets/avatar.png")}
+                style={styles.profilePicture}
+              />
+            )}
+            <Text style={styles.username}>{post.username}</Text>
+          </View>
           <TouchableOpacity onPress={() => openOptionsModal(post)}>
             <Ionicons name="ellipsis-vertical" size={24} color="black" />
           </TouchableOpacity>
@@ -242,24 +259,17 @@ const HomeScreen = ({ route }) => {
                 <FontAwesome name="comment-o" size={24} color="black" />
               </TouchableOpacity>
 
-              <TouchableOpacity
-                onPress={() => {}}
-                style={styles.actionButtons}
-              >
-                <Ionicons
-                  name="paper-plane-outline"
-                  size={24}
-                  color="black"
-                />
+              <TouchableOpacity onPress={() => {}} style={styles.actionButtons}>
+                <Ionicons name="paper-plane-outline" size={24} color="black" />
               </TouchableOpacity>
             </View>
             <View>
               <TouchableOpacity
- onPress={() => {
-  handleSavePost(post._id);
-  // Add code to show the animated message
-  setShowAnimatedMessage(true);
-}}
+                onPress={() => {
+                  handleSavePost(post._id);
+                  // Add code to show the animated message
+                  setShowAnimatedMessage(true);
+                }}
                 style={styles.saveButton}
               >
                 <Ionicons
@@ -275,34 +285,47 @@ const HomeScreen = ({ route }) => {
             </View>
           </View>
           <View style={styles.socialInfo}>
-            <Text style={styles.likes}>
-              {post.likes?.length || 0} likes
-            </Text>
+            <Text style={styles.likes}>{post.likes?.length || 0} likes</Text>
             <Text style={styles.comments}>
               View all {post.comments?.length || 0} comments
             </Text>
           </View>
-          {showCommentInput && (
-            <View style={styles.commentInputContainer}>
-              <TextInput
-                style={styles.commentInput}
-                placeholder="Add a comment..."
-                value={commentText}
-                onChangeText={setCommentText}
-              />
-              <TouchableOpacity
-                onPress={() => handleComment(post._id)}
-                style={styles.postCommentButton}
-              >
-                <Text style={styles.postCommentButtonText}>Post</Text>
-              </TouchableOpacity>
-            </View>
-          )}
         </View>
       </View>
     );
   };
-
+  const [comments, setComments] = useState([
+    {
+      image: require("../assets/avatar.png"),
+      comment: "I Still find it",
+      timing: "1h",
+      userName: "Samy",
+    },
+    {
+      image: require("../assets/avatar.png"),
+      comment: "I Still find it",
+      timing: "49m",
+      userName: "Raj",
+    },
+    {
+      image: require("../assets/avatar.png"),
+      comment: "I Still find it",
+      timing: "1h50m",
+      userName: "Samy",
+    },
+    {
+      image: require("../assets/avatar.png"),
+      comment: "I Still find it",
+      timing: "2h",
+      userName: "Ravi",
+    },
+    {
+      image: require("../assets/avatar.png"),
+      comment: "I Still find it",
+      timing: "1d",
+      userName: "Samoya",
+    },
+  ]);
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.navBar}>
@@ -320,6 +343,7 @@ const HomeScreen = ({ route }) => {
         <View style={styles.postContainer}>
           {posts.map((post) => renderPost(post))}
         </View>
+        {/* three dots modal */}
         <Modal
           animationType="slide"
           transparent={true}
@@ -328,25 +352,99 @@ const HomeScreen = ({ route }) => {
         >
           <View style={styles.modalContainer}>
             <View style={styles.modalContent}>
-              <TouchableOpacity onPress={closeOptionsModal}>
-                <Text style={styles.closeModalText}>Close</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => {}}>
-                <Text>saved</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => {}}>
-                <Text>Share</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => {}}>
-                <Text>Unfollow</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => {}}>
-                <Text>handleImagePicker</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => {}}>
-                <Text>About this account</Text>
-              </TouchableOpacity>
+              <View style={styles.threeDotModalUpper}>
+                <View
+                  style={styles.threeDotUpperIconContainer}
+                >
+                  <View
+                   style={styles.threeDotUpperIcon}
+                  >
+                    <Feather name="bookmark" size={24} color="black" />
+                  </View>
+                  <Text>Save</Text>
+                </View>
+                <View
+                  style={styles.threeDotUpperIconContainer}
+                >
+                  <View
+                    style={styles.threeDotUpperIcon}
+                  >
+                    <Image source={require("../assets/avatar.png")} />
+                  </View>
+                  <Text>View profile</Text>
+                </View>
+              </View>
+              <View>
+                <View>
+                  <Text>Unfollow</Text>
+                </View>
+                <View>
+                  <Text>About this account</Text>
+                </View>
+                <View>
+                  <Text>Report</Text>
+                </View>
+              </View>
             </View>
+          </View>
+        </Modal>
+        {/* comments modal */}
+        <Modal
+          animationType="slide"
+          // transparent={true}
+          visible={showCommentInput}
+          onRequestClose={() => setShowCommentInput(false)}
+        >
+          <ScrollView>
+            {comments.map((comment, index) => (
+              <View key={index} style={styles.allCommentsContainer}>
+                {/* Profile Image */}
+                <Image
+                  source={comment.image}
+                  style={styles.commentProfileImage}
+                />
+                {/* Comment Text */}
+                <View style={styles.rightSideContainer}>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <Text style={styles.userNameComment}>
+                      {comment.userName}
+                    </Text>
+                    <Text>{comment.timing}</Text>
+                  </View>
+                  <View style={styles.commentLike}>
+                    <Text style={styles.commentText}>{comment.comment}</Text>
+                    <TouchableOpacity style={styles.actionButtons}>
+                      <AntDesign name={"hearto"} size={18} color={"gray"} />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            ))}
+          </ScrollView>
+
+          <View style={styles.commentInputContainer}>
+            <Image
+              source={require("../assets/avatar.png")}
+              style={styles.commentProfileImage}
+            />
+            <TextInput
+              style={styles.commentInput}
+              placeholder="Add a comment..."
+              value={commentText}
+              onChangeText={setCommentText}
+            />
+            <TouchableOpacity onPress={handleComment}>
+              <MaterialCommunityIcons
+                name="send-circle"
+                size={34}
+                color="black"
+              />
+            </TouchableOpacity>
           </View>
         </Modal>
         {showChat && <MessageContainer />}
@@ -360,7 +458,7 @@ const HomeScreen = ({ route }) => {
       )}
     </SafeAreaView>
   );
-}  
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -406,13 +504,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 8,
   },
+  postUserNameImg: {
+    flexDirection: "row",
+    gap: 10,
+    alignItems: "center",
+  },
   profilePicture: {
-    width: 40,
-    height: 10,
-    borderRadius: 20,
-    marginRight: 10,
+    width: 45,
+    height: 45,
+    borderRadius: 50,
   },
   username: {
+    fontWeight: "bold",
+  },
+  userNameComment: {
     fontWeight: "bold",
   },
   postContent: {
@@ -421,6 +526,7 @@ const styles = StyleSheet.create({
   },
   captions: {
     paddingHorizontal: 10,
+    marginBottom: 5,
     fontWeight: "500",
   },
   postImage: {
@@ -428,9 +534,11 @@ const styles = StyleSheet.create({
     height: 550,
   },
   actionButtons: {
+    display: "flex",
+    alignItems: "center",
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingHorizontal: 10,
+    paddingHorizontal: 8,
     paddingVertical: 10,
   },
   actionLeftButtons: {
@@ -439,7 +547,7 @@ const styles = StyleSheet.create({
     gap: 10, // Adjust the gap between icons
   },
   socialInfo: {
-    paddingHorizontal: 10,
+    paddingHorizontal: 15,
   },
   likes: {
     fontWeight: "bold",
@@ -452,33 +560,53 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
   },
   modalContent: {
     backgroundColor: "white",
+    minHeight: 600,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     padding: 20,
-    borderRadius: 10,
-    elevation: 5,
   },
-  closeModalText: {
-    alignSelf: "flex-end",
-    marginBottom: 10,
+  allCommentsContainer: {
+    flexDirection: "row",
+    gap: 10,
+    marginVertical: 10,
+    paddingHorizontal: 10,
+  },
+  commentLike: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  rightSideContainer: {
+    flex: 1,
   },
   commentInputContainer: {
     flexDirection: "row",
     alignItems: "center",
     marginTop: 10,
     paddingHorizontal: 10,
+    paddingVertical: 5,
+    gap: 5,
+    borderTopWidth: 1,
+    borderColor: "#000",
+  },
+  commentProfileImage: {
+    width: 45,
+    height: 45,
+    borderRadius: 50,
   },
   commentInput: {
-    flex: 1,
     height: 40,
-    borderWidth: 1,
-    borderColor: "#ddd",
+    flex: 1,
+    // borderWidth: 1,
+    // borderColor: "#000",
     borderRadius: 5,
     paddingHorizontal: 10,
+    paddingVertical: 10,
+    marginHorizontal: 5,
   },
   postCommentButton: {
     marginLeft: 10,
@@ -490,6 +618,26 @@ const styles = StyleSheet.create({
   postCommentButtonText: {
     color: "#fff",
   },
+  threeDotModalUpper: {
+    justifyContent: "center",
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 50,
+    paddingVertical: 30,
+  },
+  threeDotUpperIconContainer:{
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 10,
+  },
+  threeDotUpperIcon:{
+    width: 60,
+    height: 60,
+    borderRadius: 50,
+    borderWidth: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  }
 });
 
 export default HomeScreen;
