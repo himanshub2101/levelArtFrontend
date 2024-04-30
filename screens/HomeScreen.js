@@ -10,6 +10,7 @@ import {
   SafeAreaView,
   Modal,
   TextInput,
+  Alert,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import jwt_decode from "jwt-decode";
@@ -18,8 +19,7 @@ import { AntDesign, FontAwesome, Ionicons } from "@expo/vector-icons";
 import logo from "../assets/logo.png";
 import { UserType } from "../UserContext";
 import MessageContainer from "../components/messageContainer"; // Import MessageContainer component
-// Import the necessary icon
-// import { Feather } from "@expo/vector-icons";
+import AnimatedMessage from "../components/AnimatedMessage"; // Import AnimatedMessage component
 
 const HomeScreen = ({ route }) => {
   const { userId, setUserId } = useContext(UserType);
@@ -32,6 +32,8 @@ const HomeScreen = ({ route }) => {
   const [showCommentInput, setShowCommentInput] = useState(false); // State to manage comment input visibility
   const [commentText, setCommentText] = useState(""); // State to store the comment text
   const [savedPosts, setSavedPosts] = useState([]); // State to store saved posts
+  const [showAnimatedMessage, setShowAnimatedMessage] = useState(false);
+  const [animatedMessage, setAnimatedMessage] = useState('');
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -180,6 +182,8 @@ const HomeScreen = ({ route }) => {
   const handleSavePost = async (postId) => {
     try {
       const isSaved = savedPosts.includes(postId);
+      // Set the animated message state before updating savedPosts
+      setAnimatedMessage(isSaved ? 'The post has been unsaved successfully!' : 'The post has been saved successfully!');
       const updatedSavedPosts = isSaved
         ? savedPosts.filter((savedPostId) => savedPostId !== postId)
         : [...savedPosts, postId];
@@ -192,10 +196,16 @@ const HomeScreen = ({ route }) => {
       console.error("Error saving post:", error);
     }
   };
+  
+  
 
-  const renderPost = (post) => {
+  const handleAnimationEnd = () => {
+    setShowAnimatedMessage(false);
+  };
+
+  const renderPost = (post, index) => {
     return (
-      <View key={`${post.postedBy}-${post.postId}`} style={styles.post}>
+      <View key={post._id} style={styles.post}>
         <View style={styles.postHeader}>
           {post.user && post.user.profilePicture && (
             <Image
@@ -214,51 +224,62 @@ const HomeScreen = ({ route }) => {
             <Image source={{ uri: post.img }} style={styles.postImage} />
           )}
           <View style={styles.actionButtons}>
-          <View style={styles.actionLeftButtons}>
-            <TouchableOpacity
-              onPress={() => handleLike(post._id)}
-              style={styles.actionButton}
-            >
-              <AntDesign
-                name={post.liked ? "heart" : "hearto"}
-                size={30}
-                color={post.liked ? "red" : "black"}
-              />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={toggleCommentInput}
-              style={styles.actionButton}
-            >
-              <FontAwesome name="comment-o" size={30} color="black" />
-            </TouchableOpacity>
-            
+            <View style={styles.actionLeftButtons}>
+              <TouchableOpacity
+                onPress={() => handleLike(post._id)}
+                style={styles.actionButtons}
+              >
+                <AntDesign
+                  name={post.liked ? "heart" : "hearto"}
+                  size={24}
+                  color={post.liked ? "red" : "black"}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={toggleCommentInput}
+                style={styles.actionButtons}
+              >
+                <FontAwesome name="comment-o" size={24} color="black" />
+              </TouchableOpacity>
 
-            <TouchableOpacity onPress={() => {}} style={styles.actionButton}>
-              <Ionicons name="paper-plane-outline" size={30} color="black" />
-            </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {}}
+                style={styles.actionButtons}
+              >
+                <Ionicons
+                  name="paper-plane-outline"
+                  size={24}
+                  color="black"
+                />
+              </TouchableOpacity>
             </View>
             <View>
-            <TouchableOpacity
-              onPress={() => handleSavePost(post._id)}
-              style={styles.saveButton}
-            >
-              <Ionicons
-                name={
-                  savedPosts.includes(post._id)
-                    ? "bookmark"
-                    : "bookmark-outline"
-                }
-                size={30}
-                color={savedPosts.includes(post._id) ? "#000" : "#8e8e8e"}
-              />
-
-            </TouchableOpacity>
+              <TouchableOpacity
+ onPress={() => {
+  handleSavePost(post._id);
+  // Add code to show the animated message
+  setShowAnimatedMessage(true);
+}}
+                style={styles.saveButton}
+              >
+                <Ionicons
+                  name={
+                    savedPosts.includes(post._id)
+                      ? "bookmark"
+                      : "bookmark-outline"
+                  }
+                  size={24}
+                  color={savedPosts.includes(post._id) ? "#000" : "#8e8e8e"}
+                />
+              </TouchableOpacity>
             </View>
           </View>
           <View style={styles.socialInfo}>
-            <Text style={styles.likes}>{post.likes?.length || 0} likes</Text>
+            <Text style={styles.likes}>
+              {post.likes?.length || 0} likes
+            </Text>
             <Text style={styles.comments}>
-             View all {post.comments?.length || 0} comments
+              View all {post.comments?.length || 0} comments
             </Text>
           </View>
           {showCommentInput && (
@@ -284,13 +305,9 @@ const HomeScreen = ({ route }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-    
-    <View style={styles.navBar}>
+      <View style={styles.navBar}>
         <Image style={styles.logo} source={logo} />
-        <TouchableOpacity
-          style={styles.chatIconContainer}
-          // onPress={handleChatIconPress} 
-        >
+        <TouchableOpacity style={styles.chatIconContainer}>
           <Ionicons name="chatbubble-outline" size={24} color="black" />
         </TouchableOpacity>
       </View>
@@ -334,27 +351,32 @@ const HomeScreen = ({ route }) => {
         </Modal>
         {showChat && <MessageContainer />}
       </ScrollView>
+      {showAnimatedMessage && (
+        <AnimatedMessage
+          message={animatedMessage}
+          onAnimationEnd={handleAnimationEnd}
+          isVisible={showAnimatedMessage}
+        />
+      )}
     </SafeAreaView>
   );
-};
+}  
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "white",
-
   },
   scrollView: {
     flex: 1,
-    marginTop:5,
+    marginTop: 5,
   },
   navBar: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 10,
-    // paddingVertical: 8,
-    marginTop:30,
+    marginTop: 30,
     borderBottomWidth: 1,
     borderColor: "#ddd",
   },
@@ -362,10 +384,10 @@ const styles = StyleSheet.create({
     width: 80,
     height: 60,
     resizeMode: "contain",
-    marginRight:'auto',
+    marginRight: "auto",
   },
   chatIconContainer: {
-    marginLeft: 'auto', 
+    marginLeft: "auto",
   },
   postContainer: {
     paddingHorizontal: 5,
@@ -397,40 +419,36 @@ const styles = StyleSheet.create({
     minHeight: 100,
     paddingVertical: 10,
   },
-  captions:{
-  paddingHorizontal:10,
-  fontWeight:'500',
-  
+  captions: {
+    paddingHorizontal: 10,
+    fontWeight: "500",
   },
   postImage: {
     width: "100%",
     height: 550,
   },
-
   actionButtons: {
-  flexDirection:"row",
-  justifyContent:"space-between",
-  paddingHorizontal: 10,
-  paddingVertical: 10,
-  // marginHorizontal: 5,
-  },
-  actionLeftButtons:{
     flexDirection: "row",
-    gap:20,
-    // borderTopWidth: 1,
-    // borderColor: "#ddd",
+    justifyContent: "space-between",
+    paddingHorizontal: 10,
+    paddingVertical: 10,
   },
-  socialInfo:{
-   paddingHorizontal:10,
+  actionLeftButtons: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10, // Adjust the gap between icons
+  },
+  socialInfo: {
+    paddingHorizontal: 10,
   },
   likes: {
     fontWeight: "bold",
     marginBottom: 5,
   },
-  comments:{
+  comments: {
     fontWeight: "bold",
-    color:'#000',
-    opacity:0.5,
+    color: "#000",
+    opacity: 0.5,
   },
   modalContainer: {
     flex: 1,

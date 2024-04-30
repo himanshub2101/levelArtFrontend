@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     paddingVertical: 10,
-    backgroundColor: '#fafafa',
+    // backgroundColor: '#fafafa',
   },
   searchIconContainer: {
     marginLeft: 10,
