@@ -1,14 +1,24 @@
 import React, { useEffect, useState, useContext } from "react";
-import { StyleSheet, View, ScrollView, Text, TextInput, Button, Image, TouchableOpacity } from "react-native";
+import {
+  StyleSheet,
+  View,
+  ScrollView,
+  Text,
+  TextInput,
+  Button,
+  Image,
+  TouchableOpacity,
+} from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { UserType } from '../UserContext';
-import Icon from 'react-native-vector-icons/Ionicons';
-import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
+import { UserType } from "../UserContext";
+import Icon from "react-native-vector-icons/Ionicons";
+import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import ImagesScreen from './ImagesScreen'; // Import the ImagesScreen component
-import TweetsScreen from './TweetsScreen'; // Import the TweetsScreen component
-
+import ImagesScreen from "./ImagesScreen"; // Import the ImagesScreen component
+import TweetsScreen from "./TweetsScreen"; // Import the TweetsScreen component
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { MaterialIcons } from "@expo/vector-icons";
 const Tab = createMaterialTopTabNavigator();
 
 const ProfileScreen = () => {
@@ -26,13 +36,18 @@ const ProfileScreen = () => {
       try {
         const authToken = await AsyncStorage.getItem("authToken");
 
-        const profileResponse = await axios.get(`https://levelart.up.railway.app/followers/${userId}/followers`, {
-          headers: {
-            Authorization: `Bearer ${authToken}`,
-          },
-        }).catch((error) => {
-          console.error("Error fetching profile:", error);
-        });
+        const profileResponse = await axios
+          .get(
+            `https://levelart.up.railway.app/followers/${userId}/followers`,
+            {
+              headers: {
+                Authorization: `Bearer ${authToken}`,
+              },
+            }
+          )
+          .catch((error) => {
+            console.error("Error fetching profile:", error);
+          });
 
         if (profileResponse) {
           const { user, followers, followings, bio } = profileResponse.data;
@@ -41,25 +56,32 @@ const ProfileScreen = () => {
           setFollowings(followings?.length || 0);
           setBio(bio || "");
 
-          const postsResponse = await axios.get(`https://levelart.up.railway.app/posts/user/${userId}`, {
-            headers: {
-              Authorization: `Bearer ${authToken}`,
-            },
-          }).catch((error) => {
-            console.error("Error fetching posts:", error);
-          });
+          const postsResponse = await axios
+            .get(`https://levelart.up.railway.app/posts/user/${userId}`, {
+              headers: {
+                Authorization: `Bearer ${authToken}`,
+              },
+            })
+            .catch((error) => {
+              console.error("Error fetching posts:", error);
+            });
 
           if (postsResponse) {
             setPosts(postsResponse.data);
           }
 
-          const repliesResponse = await axios.get(`https://levelart.up.railway.app/posts/user/${userId}/replies`, {
-            headers: {
-              Authorization: `Bearer ${authToken}`,
-            },
-          }).catch((error) => {
-            console.error("Error fetching replies:", error);
-          });
+          const repliesResponse = await axios
+            .get(
+              `https://levelart.up.railway.app/posts/user/${userId}/replies`,
+              {
+                headers: {
+                  Authorization: `Bearer ${authToken}`,
+                },
+              }
+            )
+            .catch((error) => {
+              console.error("Error fetching replies:", error);
+            });
 
           if (repliesResponse) {
             setReplies(repliesResponse.data);
@@ -88,7 +110,7 @@ const ProfileScreen = () => {
   };
 
   const handleSettingsPress = () => {
-    navigation.navigate('Settings');
+    navigation.navigate("Settings");
   };
 
   const updateBio = async () => {
@@ -110,57 +132,106 @@ const ProfileScreen = () => {
   };
 
   // Filter posts based on whether they contain images
-  const imagePosts = posts.filter(post => post.img); // Filter posts with images
-  const tweetPosts = posts.filter(post => !post.img); // Filter posts without images
+  const imagePosts = posts.filter((post) => post.img); // Filter posts with images
+  const tweetPosts = posts.filter((post) => !post.img); // Filter posts without images
 
   return (
     <View style={styles.container}>
-      <ScrollView>
-        <View style={styles.profileHeader}>
-          <View style={styles.userInfo}>
-            <Image
-              style={styles.profileImage}
-              source={{
-                uri: "https://cdn-icons-png.flaticon.com/128/149/149071.png",
-              }}
-            />
-            <View style={styles.userStats}>
-              <Text style={styles.username}>{user}</Text>
-              <View style={styles.statsContainer}>
-                <Text style={styles.statsText}>{posts.length} posts</Text>
-                <Text style={styles.statsText}>{followers} followers</Text>
-                <Text style={styles.statsText}>{followings} following</Text>
-              </View>
+      {/* <ScrollView> */}
+      <View style={styles.profileHeader}>
+        <Text>UserName</Text>
+        <TouchableOpacity
+          style={styles.settingsIcon}
+          onPress={handleSettingsPress}
+        >
+          <Icon name="settings-outline" size={30} color="#333" />
+        </TouchableOpacity>
+      </View>
+      <View style={styles.profileTop}>
+        <View style={styles.userInfo}>
+          <Image
+            style={styles.profileImage}
+            source={{
+              uri: "https://cdn-icons-png.flaticon.com/128/149/149071.png",
+            }}
+          />
+          <View style={styles.userStats}>
+            {/* <Text style={styles.username}>{user}</Text> */}
+
+            <View style={styles.userStatsItem}>
+              <Text style={styles.statsCount}>{posts.length}</Text>
+              <Text style={styles.statsText}> posts</Text>
+            </View>
+            <View style={styles.userStatsItem}>
+              <Text style={styles.statsCount}>{followers}</Text>
+              <Text style={styles.statsText}> followers</Text>
+            </View>
+            <View style={styles.userStatsItem}>
+              <Text style={styles.statsCount}>{followings} </Text>
+              <Text style={styles.statsText}>following</Text>
             </View>
           </View>
-          <TouchableOpacity style={styles.settingsIcon} onPress={handleSettingsPress}>
-            <Icon name="settings-outline" size={30} color="#333" />
-          </TouchableOpacity>
         </View>
+      </View>
 
-        <View style={styles.profileInfo}>
-          <View style={styles.bioContainer}>
-            <View style={styles.bioTextContainer}>
-              <Text style={styles.bioLabel}>Bio:</Text>
-              <TouchableOpacity style={styles.updateBioButton} onPress={updateBio}>
-                <Text style={styles.updateBioButtonText}>Update Bio</Text>
-              </TouchableOpacity>
-            </View>
+      <View style={styles.profileInfo}>
+        <View style={styles.bioContainer}>
+          <View style={styles.bioTextContainer}>
+            <Text style={styles.bioLabel}>Akash levelup</Text>
+            <TouchableOpacity
+              style={styles.updateBioButton}
+              onPress={updateBio}
+            >
+              <Text style={styles.updateBioButtonText}>Edit Profile</Text>
+            </TouchableOpacity>
           </View>
         </View>
+      </View>
 
-        {/* Render the Tab.Navigator outside the ScrollView */}
-        <Tab.Navigator>
-          <Tab.Screen name="Posts" component={() => <ImagesScreen posts={imagePosts} />} />
-          <Tab.Screen name="Tweets" component={() => <TweetsScreen posts={tweetPosts} />} />
-        </Tab.Navigator>
+      {/* Render the Tab.Navigator outside the ScrollView */}
+      <Tab.Navigator>
+        <Tab.Screen
+          name="Posts"
+          component={() => <ImagesScreen posts={imagePosts} />}
+          options={{
+            // tabBarLabel:"",
+            tabBarIcon: ({ color, size }) => (
+              <MaterialCommunityIcons name="grid" size={24} color="black" />
+            ),
+          }}
+        />
+        <Tab.Screen
+          name="Tweets"
+          component={() => <TweetsScreen posts={tweetPosts} />}
+          options={{
+            // tabBarLabel:"",
+            tabBarIcon: ({ color, size }) => (
+              <MaterialCommunityIcons
+                name="message-text"
+                size={24}
+                color="black"
+              />
+            ),
+          }}
+        />
+        <Tab.Screen
+          name="Tag"
+          component={() => <TweetsScreen posts={tweetPosts} />}
+          options={{
+            // tabBarLabel:"",
+            tabBarIcon: ({ color, size }) => (
+              <MaterialIcons name="tag" size={24} color="black" />
+            ),
+          }}
+        />
+      </Tab.Navigator>
 
-        <View style={styles.buttonsContainer}>
-          <TouchableOpacity style={styles.button} onPress={logout}>
-            <Text style={styles.buttonText}>Logout</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
+      <View style={styles.buttonsContainer}>
+        <TouchableOpacity style={styles.button} onPress={logout}>
+          <Text style={styles.buttonText}>Logout</Text>
+        </TouchableOpacity>
+      </View>
+      {/* </ScrollView> */}
     </View>
   );
 };
@@ -168,23 +239,30 @@ const ProfileScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 10,
-    backgroundColor: 'white',
+    backgroundColor: "white",
   },
   profileHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 20,
-    paddingHorizontal: 15,
-    backgroundColor: 'white',
+    marginVertical: 20,
+    paddingHorizontal: 10,
+    paddingTop: 10,
+    backgroundColor: "white",
+  },
+  profileTop: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 10,
+    paddingVertical: 10,
   },
   username: {
     fontSize: 20,
     fontWeight: "bold",
   },
   settingsIcon: {
-    marginLeft: 'auto',
+    marginLeft: "auto",
   },
   profileInfo: {
     flexDirection: "column",
@@ -196,14 +274,14 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   profileImage: {
-    width: 100,
-    height: 100,
+    width: 80,
+    height: 80,
     borderRadius: 50,
     resizeMode: "cover",
   },
   bioTextContainer: {
     flex: 1,
-    alignItems: 'flex-start',
+    alignItems: "flex-start",
     padding: 10,
   },
   bioLabel: {
@@ -215,6 +293,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 5,
+    marginTop: 8,
   },
   updateBioButtonText: {
     color: "white",
@@ -238,17 +317,25 @@ const styles = StyleSheet.create({
   },
   userInfo: {
     flexDirection: "row",
-    alignItems: "center",
   },
   userStats: {
     marginLeft: 20,
-  },
-  statsContainer: {
     flexDirection: "row",
-    marginTop: 5,
+    flex: 1,
+    justifyContent: "space-evenly",
+    alignItems: "center",
   },
+  userStatsItem: {
+    alignItems: "center",
+  },
+
   statsText: {
-    marginRight: 10,
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  statsCount: {
+    fontWeight: "bold",
+    fontSize: 22,
   },
 });
 

@@ -1,17 +1,29 @@
 import React, { useState } from "react";
-import { StyleSheet, Text, View, SafeAreaView, Pressable, TextInput, KeyboardAvoidingView, Image, Alert, ScrollView, Platform } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  SafeAreaView,
+  Pressable,
+  TextInput,
+  KeyboardAvoidingView,
+  Image,
+  Alert,
+  ScrollView,
+  Platform,
+} from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { AntDesign } from "@expo/vector-icons";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { Picker } from '@react-native-picker/picker';
+import { Picker } from "@react-native-picker/picker";
 
 import logo from "../assets/logo.png";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import ArtistForm from '../components/forms/artist';
-import VisitorsForm from '../components/forms/visitors';
-import ProductionForm from '../components/forms/production';
+import ArtistForm from "../components/forms/artist";
+import VisitorsForm from "../components/forms/visitors";
+import ProductionForm from "../components/forms/production";
 const RegisterScreen = () => {
   const [username, setUserName] = useState("");
   const [email, setEmail] = useState("");
@@ -21,19 +33,28 @@ const RegisterScreen = () => {
   const [userType, setUserType] = useState("artist"); // Default user type is artist
   const [nameError, setNameError] = useState({ isError: false, message: "" });
   const [emailError, setEmailError] = useState({ isError: false, message: "" });
-  const [passwordError, setPasswordError] = useState({ isError: false, message: "" });
-  const [confirmPasswordError, setConfirmPasswordError] = useState({ isError: false, message: "" });
-  const [phoneNumberError, setPhoneNumberError] = useState({ isError: false, message: "" });
+  const [passwordError, setPasswordError] = useState({
+    isError: false,
+    message: "",
+  });
+  const [confirmPasswordError, setConfirmPasswordError] = useState({
+    isError: false,
+    message: "",
+  });
+  const [phoneNumberError, setPhoneNumberError] = useState({
+    isError: false,
+    message: "",
+  });
 
   const navigation = useNavigation();
-  
+
   const renderForm = () => {
     switch (userType) {
-      case 'artist':
+      case "artist":
         return <ArtistForm />;
-      case 'visitors':
+      case "visitors":
         return <VisitorsForm />;
-      case 'production':
+      case "production":
         return <ProductionForm />;
       default:
         return null;
@@ -87,20 +108,32 @@ const RegisterScreen = () => {
       hasError = true;
     }
     if (!password) {
-      setPasswordError({ isError: true, message: "Please enter your password" });
+      setPasswordError({
+        isError: true,
+        message: "Please enter your password",
+      });
       hasError = true;
     }
     if (!confirmpassword) {
-      setConfirmPasswordError({ isError: true, message: "Please confirm your password" });
+      setConfirmPasswordError({
+        isError: true,
+        message: "Please confirm your password",
+      });
       hasError = true;
     }
     if (password !== confirmpassword) {
       setPasswordError({ isError: true, message: "Passwords do not match" });
-      setConfirmPasswordError({ isError: true, message: "Passwords do not match" });
+      setConfirmPasswordError({
+        isError: true,
+        message: "Passwords do not match",
+      });
       hasError = true;
     }
     if (!phonenumber) {
-      setPhoneNumberError({ isError: true, message: "Please enter your phone number" });
+      setPhoneNumberError({
+        isError: true,
+        message: "Please enter your phone number",
+      });
       hasError = true;
     }
 
@@ -112,10 +145,11 @@ const RegisterScreen = () => {
       password: password,
       confirmpassword: confirmpassword,
       phonenumber: phonenumber,
-      userType: userType // Include userType in the user object
+      userType: userType, // Include userType in the user object
     };
 
-    axios.post("https://levelart.up.railway.app/users/register", user)
+    axios
+      .post("https://levelart.up.railway.app/users/register", user)
       .then((response) => {
         console.log(response);
         Alert.alert(
@@ -123,27 +157,27 @@ const RegisterScreen = () => {
           "You have been registered successfully"
         );
 
-        console.log("userID from Register Screen", response.data._id)
+        console.log("userID from Register Screen", response.data._id);
 
         AsyncStorage.clear();
 
         AsyncStorage.setItem("userId", response.data._id);
         switch (userType) {
-          case 'artist':
-            navigation.navigate('Artist');
+          case "artist":
+            navigation.navigate("Artist");
             break;
-          case 'visitors':
-            navigation.navigate('Visitors');
+          case "visitors":
+            navigation.navigate("Visitors");
             break;
-          case 'production':
-            navigation.navigate('Production');
+          case "production":
+            navigation.navigate("Production");
             break;
           default:
             // Navigate to a default screen if user type is not recognized
-            navigation.navigate('DefaultScreen');
+            navigation.navigate("DefaultScreen");
             break;
         }
-        navigation.navigate("Login")
+        navigation.navigate("Login");
         setUserName("");
         setEmail("");
         setPassword("");
@@ -151,22 +185,37 @@ const RegisterScreen = () => {
         setPhoneNumber("");
       })
       .catch((error) => {
-        console.log("error.response:", error.response)
-        console.log("error.response.data:", error.response.data)
+        console.log("error.response:", error.response);
+        console.log("error.response.data:", error.response.data);
 
         if (error.response.data.message === "Email is already registred") {
           // If email is already registered, display an error message
-          setEmailError({ isError: true, message: "This email is already registered. Please use a different email address." });
-        }
-        else if (error.response && error.response.data && error.response.data.error === "Username already registered") {
+          setEmailError({
+            isError: true,
+            message:
+              "This email is already registered. Please use a different email address.",
+          });
+        } else if (
+          error.response &&
+          error.response.data &&
+          error.response.data.error === "Username already registered"
+        ) {
           // If username is already registered, display an error message
-          setNameError({ isError: true, message: "This username is already registered. Please use a different username." });
-        }
-        else if (error.response.data.message === "Phone number is already registred") {
+          setNameError({
+            isError: true,
+            message:
+              "This username is already registered. Please use a different username.",
+          });
+        } else if (
+          error.response.data.message === "Phone number is already registred"
+        ) {
           // If phone number is already registered, display an error message
-          setPhoneNumberError({ isError: true, message: "This phone number is already registered. Please use a different phone number." });
-        }
-        else {
+          setPhoneNumberError({
+            isError: true,
+            message:
+              "This phone number is already registered. Please use a different phone number.",
+          });
+        } else {
           // Handle other errors
           Alert.alert(
             "Registration failed",
@@ -178,25 +227,38 @@ const RegisterScreen = () => {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-      >
-        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-          <View style={styles.container}>
-            <View style={styles.logoContainer}>
-              <Image
-                style={styles.logo}
-                source={logo}
-              />
-            </View>
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: "white", alignItems: "center" }}
+    >
+      <View style={{ marginTop: 50 }}>
+        <Image
+          style={{ width: 150, height: 100, resizeMode: "contain" }}
+          source={logo}
+        />
+      </View>
 
-            <Text style={styles.title}>Register to Your Account</Text>
-            <View style={{marginVertical:10}}>
-            <View style={styles.inputContainer}>
+      <KeyboardAvoidingView>
+        <View style={{ alignItems: "center", justifyContent: "center" }}>
+          <Text style={{ fontSize: 17, fontWeight: "bold", marginTop: 25 }}>
+            Register to Your Account
+          </Text>
+        </View>
+
+        <View style={{ marginTop: 40, gap: 10 }}>
+          <View>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 5,
+                borderColor: "#D0D0D0",
+                borderWidth: 1,
+                paddingVertical: 5,
+                borderRadius: 5,
+              }}
+            >
               <Ionicons
-                style={styles.inputIcon}
+                style={{ marginLeft: 8 }}
                 name="person"
                 size={24}
                 color="gray"
@@ -204,18 +266,34 @@ const RegisterScreen = () => {
               <TextInput
                 value={username}
                 onChangeText={handleNameChange}
-                placeholderTextColor="gray"
-                style={styles.input}
-                placeholder="Enter your Name"
+                placeholderTextColor={"gray"}
+                style={{
+                  color: "gray",
+                  marginVertical: 10,
+                  width: 300,
+                  fontSize: email ? 16 : 16,
+                }}
+                placeholder="Enter your name"
               />
             </View>
-            {nameError.isError && <Text style={styles.errorMessage}>{nameError.message}</Text>}
-            </View>
-           
-            <View style={{marginVertical:10}}>
-            <View style={styles.inputContainer}>
+            {nameError.isError && (
+              <Text style={styles.errorMessage}>{nameError.message}</Text>
+            )}
+          </View>
+          <View>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 5,
+                borderColor: "#D0D0D0",
+                borderWidth: 1,
+                paddingVertical: 5,
+                borderRadius: 5,
+              }}
+            >
               <MaterialIcons
-                style={styles.inputIcon}
+                style={{ marginLeft: 8 }}
                 name="email"
                 size={24}
                 color="gray"
@@ -223,18 +301,34 @@ const RegisterScreen = () => {
               <TextInput
                 value={email}
                 onChangeText={handleEmailChange}
-                placeholderTextColor="gray"
-                style={styles.input}
-                placeholder="Enter your Email"
+                placeholderTextColor={"gray"}
+                style={{
+                  color: "gray",
+                  marginVertical: 10,
+                  width: 300,
+                  fontSize: email ? 16 : 16,
+                }}
+                placeholder="enter your Email"
               />
             </View>
-            {emailError.isError && <Text style={styles.errorMessage}>{emailError.message}</Text>}
-            </View>
-           
-            <View style={{marginVertical:10}}>
-            <View style={styles.inputContainer}>
+            {emailError.isError && (
+              <Text style={styles.errorMessage}>{emailError.message}</Text>
+            )}
+          </View>
+          <View>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 5,
+                borderColor: "#D0D0D0",
+                borderWidth: 1,
+                paddingVertical: 5,
+                borderRadius: 5,
+              }}
+            >
               <AntDesign
-                style={styles.inputIcon}
+                style={{ marginLeft: 8 }}
                 name="lock"
                 size={24}
                 color="gray"
@@ -243,18 +337,34 @@ const RegisterScreen = () => {
                 secureTextEntry={true}
                 value={password}
                 onChangeText={handlePasswordChange}
-                placeholderTextColor="gray"
-                style={styles.input}
-                placeholder="Enter your Password"
+                placeholderTextColor={"gray"}
+                style={{
+                  color: "gray",
+                  marginVertical: 10,
+                  width: 300,
+                  fontSize: password ? 16 : 16,
+                }}
+                placeholder="enter your Password"
               />
             </View>
-            {passwordError.isError && <Text style={styles.errorMessage}>{passwordError.message}</Text>}
-            </View>
-            
-            <View style={{marginVertical:10}}>
-            <View style={styles.inputContainer}>
+            {passwordError.isError && (
+              <Text style={styles.errorMessage}>{passwordError.message}</Text>
+            )}
+          </View>
+          <View>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 5,
+                borderColor: "#D0D0D0",
+                borderWidth: 1,
+                paddingVertical: 5,
+                borderRadius: 5,
+              }}
+            >
               <AntDesign
-                style={styles.inputIcon}
+                style={{ marginLeft: 8 }}
                 name="lock"
                 size={24}
                 color="gray"
@@ -263,17 +373,36 @@ const RegisterScreen = () => {
                 secureTextEntry={true}
                 value={confirmpassword}
                 onChangeText={handleConfirmPasswordChange}
-                placeholderTextColor="gray"
-                style={styles.input}
+                placeholderTextColor={"gray"}
+                style={{
+                  color: "gray",
+                  marginVertical: 10,
+                  width: 300,
+                  fontSize: password ? 16 : 16,
+                }}
                 placeholder="Confirm Password"
               />
             </View>
-            {confirmPasswordError.isError && <Text style={styles.errorMessage}>{confirmPasswordError.message}</Text>}
-             </View>
-             <View style={{marginVertical:10}}>
-            <View style={styles.inputContainer}>
+            {confirmPasswordError.isError && (
+              <Text style={styles.errorMessage}>
+                {confirmPasswordError.message}
+              </Text>
+            )}
+          </View>
+          <View>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 5,
+                borderColor: "#D0D0D0",
+                borderWidth: 1,
+                paddingVertical: 5,
+                borderRadius: 5,
+              }}
+            >
               <MaterialIcons
-                style={styles.inputIcon}
+                style={{ marginLeft: 8 }}
                 name="phone"
                 size={24}
                 color="gray"
@@ -287,43 +416,69 @@ const RegisterScreen = () => {
                 placeholder="Enter your Phone Number"
               />
             </View>
-            {phoneNumberError.isError && <Text style={styles.errorMessage}>{phoneNumberError.message}(</Text>}
-</View>
-            {/* User Type Dropdown */}
-            <View style={styles.dropdownContainer}>
-              <MaterialIcons
-                style={styles.inputIcon}
-                name="person"
-                size={24}
-                color="gray"
-              />
-<Picker
-  selectedValue={userType}
-  style={styles.dropdown}
-  onValueChange={(itemValue, itemIndex) =>
-    setUserType(itemValue)
-  }>
-  <Picker.Item label="Artist" value="artist" />
-  <Picker.Item label="Visitors" value="visitors" />
-  <Picker.Item label="Production" value="production"/>
-</Picker>
-            </View>
-
-            <Pressable
-              onPress={handleRegister}
-              style={styles.button}
-            >
-              <Text style={styles.buttonText}>Register</Text>
-            </Pressable>
-
-            <Pressable
-              onPress={() => navigation.goBack()}
-              style={styles.signInText}
-            >
-              <Text>Already have an account? Sign In</Text>
-            </Pressable>
+            {phoneNumberError.isError && (
+              <Text style={styles.errorMessage}>
+                {phoneNumberError.message}
+              </Text>
+            )}
           </View>
-        </ScrollView>
+          {/* User Type Dropdown */}
+          <View style={styles.dropdownContainer}>
+            <MaterialIcons
+              style={styles.inputIcon}
+              name="person"
+              size={24}
+              color="gray"
+            />
+            <Picker
+              selectedValue={userType}
+              style={styles.dropdown}
+              onValueChange={(itemValue, itemIndex) => setUserType(itemValue)}
+            >
+              <Picker.Item label="Artist" value="artist" />
+              <Picker.Item label="Visitors" value="visitors" />
+              <Picker.Item label="Production" value="production" />
+            </Picker>
+          </View>
+        </View>
+
+        <View style={{ marginTop: 10 }} />
+
+        {/* Use Pressable to handle login action */}
+        <Pressable
+          onPress={handleRegister}
+          style={({ pressed }) => [
+            {
+              width: 200,
+              backgroundColor: pressed ? "gray" : "black",
+              padding: 15,
+              marginTop: 40,
+              marginLeft: "auto",
+              marginRight: "auto",
+              borderRadius: 6,
+            },
+          ]}
+        >
+          <Text
+            style={{
+              textAlign: "center",
+              fontWeight: "bold",
+              fontSize: 16,
+              color: "white",
+            }}
+          >
+            Register
+          </Text>
+        </Pressable>
+
+        <Pressable
+          onPress={() => navigation.navigate("Login")}
+          style={{ marginTop: 10 }}
+        >
+          <Text style={{ textAlign: "center", fontSize: 16 }}>
+            Already have an account? Sign In
+          </Text>
+        </Pressable>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -358,12 +513,11 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     paddingVertical: 5,
     paddingHorizontal: 10,
-    // marginVertical: 10,
+    marginTop: 10,
     width: "100%",
+    height: 50,
   },
-  inputIcon: {
-    marginRight: 8,
-  },
+
   input: {
     flex: 1,
     color: "gray",
@@ -390,32 +544,31 @@ const styles = StyleSheet.create({
     // marginTop: 5,
     width: "100%",
   },
- // Add the following styles to the existing styles object in your RegisterScreen component:
+  // Add the following styles to the existing styles object in your RegisterScreen component:
 
-dropdownContainer: {
-  flexDirection: "row",
-  alignItems: "center",
-  borderWidth: 1,
-  borderColor: "#D0D0D0",
-  borderRadius: 5,
-  paddingHorizontal: 10,
-  marginVertical: 10,
-  width: "100%",
-  height: 50, // Adjust the height of the dropdown container
-  overflow: "hidden", // Hide overflowing content
-},
-dropdownIcon: {
-  position: "absolute",
-  right: 10,
-},
-dropdown: {
-  flex: 1,
-  color: "gray",
-  fontSize: 16,
-  paddingHorizontal: 10,
-  borderWidth: 0,
-},
-
+  dropdownContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#D0D0D0",
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    marginVertical: 10,
+    width: "100%",
+    height: 50, // Adjust the height of the dropdown container
+    overflow: "hidden", // Hide overflowing content
+  },
+  dropdownIcon: {
+    position: "absolute",
+    right: 10,
+  },
+  dropdown: {
+    flex: 1,
+    color: "gray",
+    fontSize: 16,
+    paddingHorizontal: 10,
+    borderWidth: 0,
+  },
 });
 
 export default RegisterScreen;

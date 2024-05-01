@@ -44,33 +44,40 @@ const HomeScreen = ({ route }) => {
   const [showAnimatedMessage, setShowAnimatedMessage] = useState(false);
   const [animatedMessage, setAnimatedMessage] = useState("");
 
- // State for tracking modal position
- const [ThreeDotmodalHeight, setThreeDotModalHeight] = useState(0);
- const [ThreeDotmodalPosition, setThreeDotModalPosition] = useState({ x: 0, y: 0 });
- const { height: screenHeight } = Dimensions.get("window");
- 
- 
- const panResponder = PanResponder.create({
-  onStartShouldSetPanResponder: () => true,
-  onPanResponderMove: (evt, gestureState) => {
-    const newY = gestureState.dy + ThreeDotmodalPosition.y; // Calculate the new y position
-    const modalHeight = 600;
-    const constrainedY = Math.min(Math.max(newY, 0), screenHeight - modalHeight);
-    setThreeDotModalPosition({
-      x: 0,
-      y: constrainedY,
-    });
-    
-  },
-  onPanResponderRelease: (evt, gestureState) => {
-    const newY = gestureState.dy + ThreeDotmodalPosition.y; // Calculate the new y position
-    const modalHeight = 600;
-    const constrainedY = Math.min(Math.max(newY, 0), screenHeight - modalHeight);
-    if (constrainedY >= screenHeight - 600) {
-      closeOptionsModal();
-    }
-  },
-});
+  // State for tracking modal position
+  const [ThreeDotmodalHeight, setThreeDotModalHeight] = useState(0);
+  const [ThreeDotmodalPosition, setThreeDotModalPosition] = useState({
+    x: 0,
+    y: 0,
+  });
+  const { height: screenHeight } = Dimensions.get("window");
+
+  const panResponder = PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onPanResponderMove: (evt, gestureState) => {
+      const newY = gestureState.dy + ThreeDotmodalPosition.y; // Calculate the new y position
+      const modalHeight = 600;
+      const constrainedY = Math.min(
+        Math.max(newY, 0),
+        screenHeight - modalHeight
+      );
+      setThreeDotModalPosition({
+        x: 0,
+        y: constrainedY,
+      });
+    },
+    onPanResponderRelease: (evt, gestureState) => {
+      const newY = gestureState.dy + ThreeDotmodalPosition.y; // Calculate the new y position
+      const modalHeight = 600;
+      const constrainedY = Math.min(
+        Math.max(newY, 0),
+        screenHeight - modalHeight
+      );
+      if (constrainedY >= screenHeight - 600) {
+        closeOptionsModal();
+      }
+    },
+  });
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -198,9 +205,8 @@ const HomeScreen = ({ route }) => {
   };
 
   const closeOptionsModal = () => {
-      setModalVisible(false); 
-      setSelectedPost(null);
-    
+    setModalVisible(false);
+    setSelectedPost(null);
   };
 
   const toggleCommentInput = () => {
@@ -385,16 +391,20 @@ const HomeScreen = ({ route }) => {
           transparent={true}
           visible={modalVisible}
           onRequestClose={closeOptionsModal}
-          onLayout={(event) => setModalHeight(event.nativeEvent.layout.height)} 
-    
+          onLayout={(event) => setModalHeight(event.nativeEvent.layout.height)}
         >
-           <View style={[styles.modalContainer, { top: ThreeDotmodalPosition.y, left: ThreeDotmodalPosition.x }]}>
-           <TouchableOpacity
-      style={styles.ThreeDotModaloverlay}
-      activeOpacity={1} // Ensure the touch doesn't pass through
-      onPress={closeOptionsModal} // Close the modal when overlay is pressed
-    />
-        <View style={styles.modalContent} {...panResponder.panHandlers}>
+          <View
+            style={[
+              styles.modalContainer,
+              { top: ThreeDotmodalPosition.y, left: ThreeDotmodalPosition.x },
+            ]}
+          >
+            <TouchableOpacity
+              style={styles.ThreeDotModaloverlay}
+              activeOpacity={1} // Ensure the touch doesn't pass through
+              onPress={closeOptionsModal} // Close the modal when overlay is pressed
+            />
+            <View style={styles.modalContent} {...panResponder.panHandlers}>
               <View style={styles.threeDotModalUpper}>
                 <TouchableOpacity style={styles.threeDotUpperIconContainer}>
                   <View style={styles.threeDotUpperIcon}>
@@ -403,10 +413,15 @@ const HomeScreen = ({ route }) => {
                   <Text style={styles.threeDotMiddleItemText}>Save</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.threeDotUpperIconContainer}>
-                  <View style={styles.threeDotUpperIcon}>
-                    <Image source={require("../assets/avatar.png")} />
+                  <View>
+                    <Image
+                      style={styles.threeDotUpperIcon}
+                      source={require("../assets/avatar.png")}
+                    />
                   </View>
-                  <Text style={styles.threeDotMiddleItemText}>View profile</Text>
+                  <Text style={styles.threeDotMiddleItemText}>
+                    View profile
+                  </Text>
                 </TouchableOpacity>
               </View>
               <View style={styles.threeDotMiddleContainer}>
@@ -424,7 +439,9 @@ const HomeScreen = ({ route }) => {
                     size={24}
                     color="black"
                   />
-                  <Text style={styles.threeDotMiddleItemText}>About this account</Text>
+                  <Text style={styles.threeDotMiddleItemText}>
+                    About this account
+                  </Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.threeDotmiddleItems}>
                   <Octicons name="report" size={24} color="black" />
@@ -437,42 +454,57 @@ const HomeScreen = ({ route }) => {
         {/* comments modal */}
         <Modal
           animationType="slide"
-          // transparent={true}
+          transparent={true}
           visible={showCommentInput}
           onRequestClose={() => setShowCommentInput(false)}
         >
-          <ScrollView>
-            {comments.map((comment, index) => (
-              <View key={index} style={styles.allCommentsContainer}>
-                {/* Profile Image */}
-                <Image
-                  source={comment.image}
-                  style={styles.commentProfileImage}
-                />
-                {/* Comment Text */}
-                <View style={styles.rightSideContainer}>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                    }}
-                  >
-                    <Text style={styles.userNameComment}>
-                      {comment.userName}
-                    </Text>
-                    <Text>{comment.timing}</Text>
+          <View
+            style={[
+              styles.modalContainer,
+              { top: ThreeDotmodalPosition.y, left: ThreeDotmodalPosition.x },
+            ]}
+          >
+            <TouchableOpacity
+              style={styles.ThreeDotModaloverlay}
+              activeOpacity={1} // Ensure the touch doesn't pass through
+              onPress={toggleCommentInput} // Close the modal when overlay is pressed
+            />
+            <View style={styles.modalContent} {...panResponder.panHandlers}>
+              <ScrollView>
+                {comments.map((comment, index) => (
+                  <View key={index} style={styles.allCommentsContainer}>
+                    {/* Profile Image */}
+                    <Image
+                      source={comment.image}
+                      style={styles.commentProfileImage}
+                    />
+                    {/* Comment Text */}
+                    <View style={styles.rightSideContainer}>
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          justifyContent: "space-between",
+                        }}
+                      >
+                        <Text style={styles.userNameComment}>
+                          {comment.userName}
+                        </Text>
+                        <Text>{comment.timing}</Text>
+                      </View>
+                      <View style={styles.commentLike}>
+                        <Text style={styles.commentText}>
+                          {comment.comment}
+                        </Text>
+                        <TouchableOpacity style={styles.actionButtons}>
+                          <AntDesign name={"hearto"} size={18} color={"gray"} />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
                   </View>
-                  <View style={styles.commentLike}>
-                    <Text style={styles.commentText}>{comment.comment}</Text>
-                    <TouchableOpacity style={styles.actionButtons}>
-                      <AntDesign name={"hearto"} size={18} color={"gray"} />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </View>
-            ))}
-          </ScrollView>
-
+                ))}
+              </ScrollView>
+            </View>
+          </View>
           <View style={styles.commentInputContainer}>
             <Image
               source={require("../assets/avatar.png")}
@@ -638,6 +670,7 @@ const styles = StyleSheet.create({
     gap: 5,
     borderTopWidth: 1,
     borderColor: "#000",
+    backgroundColor: "#fff",
   },
   commentProfileImage: {
     width: 45,
@@ -683,13 +716,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     justifyContent: "center",
     alignItems: "center",
-    overflow:'hidden'
+    overflow: "hidden",
   },
   threeDotMiddleContainer: {
     gap: 30,
   },
-  threeDotMiddleItemText:{
-    fontWeight:'700',
+  threeDotMiddleItemText: {
+    fontWeight: "700",
   },
   threeDotmiddleItems: {
     flexDirection: "row",
@@ -697,12 +730,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   ThreeDotModaloverlay: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     bottom: 0,
     left: 0,
     right: 0,
-    
   },
 });
 

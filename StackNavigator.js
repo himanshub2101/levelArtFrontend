@@ -189,6 +189,11 @@ const StackNavigator = () => {
               component={ProductionForm}
               options={{ headerShown: false }}
             />
+<Stack.Screen
+              name="Main"
+              component={BottomTabs}
+              options={{ headerShown: false }}
+            />
           </>
         )}
       </Stack.Navigator>
