@@ -11,17 +11,24 @@ import {
   Modal,
   TextInput,
   Alert,
+  Dimensions,
+  PanResponder,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import jwt_decode from "jwt-decode";
 import axios from "axios";
-import { AntDesign, FontAwesome, Ionicons } from "@expo/vector-icons";
+import {
+  AntDesign,
+  FontAwesome,
+  Ionicons,
+  Feather,
+  Octicons,
+} from "@expo/vector-icons";
 import logo from "../assets/logo.png";
 import { UserType } from "../UserContext";
 import MessageContainer from "../components/messageContainer"; // Import MessageContainer component
 import AnimatedMessage from "../components/AnimatedMessage"; // Import AnimatedMessage component
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { Feather } from "@expo/vector-icons";
 
 const HomeScreen = ({ route }) => {
   const { userId, setUserId } = useContext(UserType);
@@ -36,6 +43,34 @@ const HomeScreen = ({ route }) => {
   const [savedPosts, setSavedPosts] = useState([]); // State to store saved posts
   const [showAnimatedMessage, setShowAnimatedMessage] = useState(false);
   const [animatedMessage, setAnimatedMessage] = useState("");
+
+ // State for tracking modal position
+ const [ThreeDotmodalHeight, setThreeDotModalHeight] = useState(0);
+ const [ThreeDotmodalPosition, setThreeDotModalPosition] = useState({ x: 0, y: 0 });
+ const { height: screenHeight } = Dimensions.get("window");
+ 
+ 
+ const panResponder = PanResponder.create({
+  onStartShouldSetPanResponder: () => true,
+  onPanResponderMove: (evt, gestureState) => {
+    const newY = gestureState.dy + ThreeDotmodalPosition.y; // Calculate the new y position
+    const modalHeight = 600;
+    const constrainedY = Math.min(Math.max(newY, 0), screenHeight - modalHeight);
+    setThreeDotModalPosition({
+      x: 0,
+      y: constrainedY,
+    });
+    
+  },
+  onPanResponderRelease: (evt, gestureState) => {
+    const newY = gestureState.dy + ThreeDotmodalPosition.y; // Calculate the new y position
+    const modalHeight = 600;
+    const constrainedY = Math.min(Math.max(newY, 0), screenHeight - modalHeight);
+    if (constrainedY >= screenHeight - 600) {
+      closeOptionsModal();
+    }
+  },
+});
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -163,8 +198,9 @@ const HomeScreen = ({ route }) => {
   };
 
   const closeOptionsModal = () => {
-    setSelectedPost(null);
-    setModalVisible(false);
+      setModalVisible(false); 
+      setSelectedPost(null);
+    
   };
 
   const toggleCommentInput = () => {
@@ -349,41 +385,51 @@ const HomeScreen = ({ route }) => {
           transparent={true}
           visible={modalVisible}
           onRequestClose={closeOptionsModal}
+          onLayout={(event) => setModalHeight(event.nativeEvent.layout.height)} 
+    
         >
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
+           <View style={[styles.modalContainer, { top: ThreeDotmodalPosition.y, left: ThreeDotmodalPosition.x }]}>
+           <TouchableOpacity
+      style={styles.ThreeDotModaloverlay}
+      activeOpacity={1} // Ensure the touch doesn't pass through
+      onPress={closeOptionsModal} // Close the modal when overlay is pressed
+    />
+        <View style={styles.modalContent} {...panResponder.panHandlers}>
               <View style={styles.threeDotModalUpper}>
-                <View
-                  style={styles.threeDotUpperIconContainer}
-                >
-                  <View
-                   style={styles.threeDotUpperIcon}
-                  >
+                <TouchableOpacity style={styles.threeDotUpperIconContainer}>
+                  <View style={styles.threeDotUpperIcon}>
                     <Feather name="bookmark" size={24} color="black" />
                   </View>
-                  <Text>Save</Text>
-                </View>
-                <View
-                  style={styles.threeDotUpperIconContainer}
-                >
-                  <View
-                    style={styles.threeDotUpperIcon}
-                  >
+                  <Text style={styles.threeDotMiddleItemText}>Save</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.threeDotUpperIconContainer}>
+                  <View style={styles.threeDotUpperIcon}>
                     <Image source={require("../assets/avatar.png")} />
                   </View>
-                  <Text>View profile</Text>
-                </View>
+                  <Text style={styles.threeDotMiddleItemText}>View profile</Text>
+                </TouchableOpacity>
               </View>
-              <View>
-                <View>
-                  <Text>Unfollow</Text>
-                </View>
-                <View>
-                  <Text>About this account</Text>
-                </View>
-                <View>
-                  <Text>Report</Text>
-                </View>
+              <View style={styles.threeDotMiddleContainer}>
+                <TouchableOpacity style={styles.threeDotmiddleItems}>
+                  <Ionicons
+                    name="person-remove-outline"
+                    size={24}
+                    color="black"
+                  />
+                  <Text style={styles.threeDotMiddleItemText}>Unfollow</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.threeDotmiddleItems}>
+                  <Ionicons
+                    name="person-circle-outline"
+                    size={24}
+                    color="black"
+                  />
+                  <Text style={styles.threeDotMiddleItemText}>About this account</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.threeDotmiddleItems}>
+                  <Octicons name="report" size={24} color="black" />
+                  <Text style={styles.threeDotMiddleItemText}>Report</Text>
+                </TouchableOpacity>
               </View>
             </View>
           </View>
@@ -625,19 +671,39 @@ const styles = StyleSheet.create({
     gap: 50,
     paddingVertical: 30,
   },
-  threeDotUpperIconContainer:{
+  threeDotUpperIconContainer: {
     justifyContent: "center",
     alignItems: "center",
     gap: 10,
   },
-  threeDotUpperIcon:{
+  threeDotUpperIcon: {
     width: 60,
     height: 60,
     borderRadius: 50,
     borderWidth: 1,
     justifyContent: "center",
     alignItems: "center",
-  }
+    overflow:'hidden'
+  },
+  threeDotMiddleContainer: {
+    gap: 30,
+  },
+  threeDotMiddleItemText:{
+    fontWeight:'700',
+  },
+  threeDotmiddleItems: {
+    flexDirection: "row",
+    gap: 10,
+    alignItems: "center",
+  },
+  ThreeDotModaloverlay: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    
+  },
 });
 
 export default HomeScreen;
