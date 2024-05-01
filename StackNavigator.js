@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, ActivityIndicator } from "react-native";
+import { StyleSheet, Text, View, ActivityIndicator ,SafeAreaView, KeyboardAvoidingView } from "react-native";
 import React, { useEffect, useState } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import LoginScreen from "./screens/LoginScreen";
@@ -21,7 +21,6 @@ import ProductionForm from "./components/forms/production"
 import VisitorsForm from "./components/forms/visitors"
 import ImagesScreen from "./screens/ImagesScreen";
 import TweetsScreen from "./screens/TweetsScreen";
-
 
 const StackNavigator = () => {
   const Stack = createNativeStackNavigator();
@@ -51,7 +50,8 @@ const StackNavigator = () => {
 
   // Define BottomTabs component here
   const BottomTabs = () => (
-    <Tab.Navigator>
+<Tab.Navigator
+>
       <Tab.Screen
         name="Home"
         component={HomeScreen}
@@ -91,9 +91,9 @@ const StackNavigator = () => {
           headerShown: false,
           tabBarIcon: ({ focused }) =>
             focused ? (
-              <Ionicons name="create" size={24} color="black" />
+              <AntDesign name="pluscircle" size={24} color="black" />
             ) : (
-              <Ionicons name="create-outline" size={24} color="black" />
+              <AntDesign name="pluscircleo" size={24} color="black" />
             ),
         }}
       />
@@ -128,6 +128,7 @@ const StackNavigator = () => {
         }}
       />
     </Tab.Navigator>
+
   );
 
   return (
