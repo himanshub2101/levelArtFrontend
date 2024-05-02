@@ -1,7 +1,12 @@
 import React from "react";
+import { Text } from "react-native";
 
 const TagScreen = () => {
-  return <div>TagScreen</div>;
+  return (
+    <>
+      <Text>This is a text screen</Text>
+    </>
+  );
 };
 
 export default TagScreen;

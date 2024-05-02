@@ -495,7 +495,7 @@ const HomeScreen = ({ route }) => {
                         <Text style={styles.commentText}>
                           {comment.comment}
                         </Text>
-                        <TouchableOpacity style={styles.actionButtons}>
+                        <TouchableOpacity style={{paddingVertical:5,paddingLeft:5}}>
                           <AntDesign name={"hearto"} size={18} color={"gray"} />
                         </TouchableOpacity>
                       </View>
@@ -657,6 +657,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+  },
+  commentText:{
+  flex:1,
   },
   rightSideContainer: {
     flex: 1,

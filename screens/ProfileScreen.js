@@ -8,6 +8,8 @@ import {
   Button,
   Image,
   TouchableOpacity,
+  Modal,
+  SafeAreaView,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { UserType } from "../UserContext";
@@ -17,8 +19,14 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import ImagesScreen from "./ImagesScreen"; // Import the ImagesScreen component
 import TweetsScreen from "./TweetsScreen"; // Import the TweetsScreen component
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { MaterialIcons } from "@expo/vector-icons";
+import {
+  MaterialCommunityIcons,
+  AntDesign,
+  MaterialIcons,
+} from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
+import { useRoute } from "@react-navigation/native";
+
 const Tab = createMaterialTopTabNavigator();
 
 const ProfileScreen = () => {
@@ -30,6 +38,29 @@ const ProfileScreen = () => {
   const [posts, setPosts] = useState([]);
   const [replies, setReplies] = useState([]);
   const [bio, setBio] = useState("");
+  const [image, setImage] = useState(null);
+
+  const route = useRoute();
+  const userEditProfileData = route.params?.userProfileData;
+
+  const handleImagePicker = async () => {
+    const permissionResult =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (permissionResult.granted === false) {
+      alert("Permission to access camera roll is required!");
+      return;
+    }
+
+    const pickerResult = await ImagePicker.launchImageLibraryAsync();
+    if (!pickerResult.canceled && pickerResult.assets.length > 0) {
+      console.log("Selected image URI:", pickerResult.assets[0].uri); // Log the URI of the selected image
+
+      setImage(pickerResult.assets[0].uri);
+      setIsImageSelected(true);
+    } else {
+      console.log("Image picking cancelled or no image selected");
+    }
+  };
 
   useEffect(() => {
     const fetchProfile = async (userId) => {
@@ -109,130 +140,164 @@ const ProfileScreen = () => {
     }
   };
 
-  const handleSettingsPress = () => {
-    navigation.navigate("Settings");
-  };
+  // const handleSettingsPress = () => {
+  //   navigation.navigate("Settings");
+  // };
+  // const handleEditProfile = () => {
+  //   navigation.navigate("EditProfile");
+  // };
 
-  const updateBio = async () => {
-    try {
-      const authToken = await AsyncStorage.getItem("authToken");
-      await axios.put(
-        `https://levelart.up.railway.app/user/${userId}`,
-        { bio },
-        {
-          headers: {
-            Authorization: `Bearer ${authToken}`,
-          },
-        }
-      );
-      console.log("Bio updated successfully");
-    } catch (error) {
-      console.error("Error updating bio:", error);
-    }
-  };
+  // const EditProfile = async () => {
+  //   try {
+  //     const authToken = await AsyncStorage.getItem("authToken");
+  //     await axios.put(
+  //       `https://levelart.up.railway.app/user/${userId}`,
+  //       { bio },
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${authToken}`,
+  //         },
+  //       }
+  //     );
+  //     console.log("Bio updated successfully");
+  //   } catch (error) {
+  //     console.error("Error updating bio:", error);
+  //   }
+  // };
 
   // Filter posts based on whether they contain images
   const imagePosts = posts.filter((post) => post.img); // Filter posts with images
   const tweetPosts = posts.filter((post) => !post.img); // Filter posts without images
 
   return (
-    <View style={styles.container}>
-      {/* <ScrollView> */}
-      <View style={styles.profileHeader}>
-        <Text>UserName</Text>
-        <TouchableOpacity
-          style={styles.settingsIcon}
-          onPress={handleSettingsPress}
-        >
-          <Icon name="settings-outline" size={30} color="#333" />
-        </TouchableOpacity>
-      </View>
-      <View style={styles.profileTop}>
-        <View style={styles.userInfo}>
-          <Image
-            style={styles.profileImage}
-            source={{
-              uri: "https://cdn-icons-png.flaticon.com/128/149/149071.png",
+    <>
+      <SafeAreaView style={styles.container}>
+        {/* <ScrollView> */}
+        <View style={styles.profileHeader}>
+          {userEditProfileData && userEditProfileData.editprofileusername ? (
+            <Text>{userEditProfileData.editprofileusername}</Text>
+          ) : (
+            <Text>User Name</Text>
+          )}
+          <TouchableOpacity
+            style={styles.settingsIcon}
+            onPress={()=>navigation.navigate("Settings")}
+          >
+            <Icon name="settings-outline" size={30} color="#333" />
+          </TouchableOpacity>
+        </View>
+        <View style={styles.profileTop}>
+          <View style={styles.userInfo}>
+            <TouchableOpacity
+              onPress={handleImagePicker}
+              style={{ position: "relative" }}
+            >
+              {image ? (
+                <Image style={styles.profileImage} source={{ uri: image }} />
+              ) : userEditProfileData && userEditProfileData.image ? (
+                <Image
+                  style={styles.profileImage}
+                  source={{ uri: userEditProfileData.image }}
+                />
+              ) : (
+                <Image
+                  style={styles.profileImage}
+                  source={{
+                    uri: "https://cdn-icons-png.flaticon.com/128/149/149071.png",
+                  }}
+                />
+              )}
+
+              <TouchableOpacity
+                onPress={handleImagePicker}
+                style={{ position: "absolute", bottom: -3, right: -3 }}
+              >
+                <AntDesign name="pluscircle" size={24} color="blue" />
+              </TouchableOpacity>
+            </TouchableOpacity>
+            <View style={styles.userStats}>
+              {/* <Text style={styles.username}>{user}</Text> */}
+
+              <View style={styles.userStatsItem}>
+                <Text style={styles.statsCount}>{posts.length}</Text>
+                <Text style={styles.statsText}> posts</Text>
+              </View>
+              <View style={styles.userStatsItem}>
+                <Text style={styles.statsCount}>{followers}</Text>
+                <Text style={styles.statsText}> followers</Text>
+              </View>
+              <View style={styles.userStatsItem}>
+                <Text style={styles.statsCount}>{followings} </Text>
+                <Text style={styles.statsText}>following</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.profileInfo}>
+          <View style={styles.bioContainer}>
+            <View style={styles.bioTextContainer}>
+              {userEditProfileData && userEditProfileData.name ? (
+                <Text style={styles.bioLabel}>{userEditProfileData.name}</Text>
+              ) : (
+                <Text style={styles.bioLabel}>Akash Saini</Text>
+              )}
+              <TouchableOpacity
+                style={styles.updateBioButton}
+                onPress={()=>navigation.navigate("EditProfile")}
+              >
+                <Text style={styles.updateBioButtonText}>Edit Profile</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+
+        {/* Render the Tab.Navigator outside the ScrollView */}
+        <Tab.Navigator>
+          <Tab.Screen
+            name="Posts"
+            component={() => <ImagesScreen posts={imagePosts} />}
+            options={{
+              // tabBarLabel:"",
+              tabBarIcon: ({ color, size }) => (
+                <MaterialCommunityIcons name="grid" size={24} color="black" />
+              ),
             }}
           />
-          <View style={styles.userStats}>
-            {/* <Text style={styles.username}>{user}</Text> */}
+          <Tab.Screen
+            name="Tweets"
+            component={() => <TweetsScreen posts={tweetPosts} />}
+            options={{
+              // tabBarLabel:"",
+              tabBarIcon: ({ color, size }) => (
+                <MaterialCommunityIcons
+                  name="message-text"
+                  size={24}
+                  color="black"
+                />
+              ),
+            }}
+          />
+          <Tab.Screen
+            name="Tag"
+            component={() => <TweetsScreen posts={tweetPosts} />}
+            options={{
+              // tabBarLabel:"",
+              tabBarIcon: ({ color, size }) => (
+                <MaterialIcons name="tag" size={24} color="black" />
+              ),
+            }}
+          />
+        </Tab.Navigator>
 
-            <View style={styles.userStatsItem}>
-              <Text style={styles.statsCount}>{posts.length}</Text>
-              <Text style={styles.statsText}> posts</Text>
-            </View>
-            <View style={styles.userStatsItem}>
-              <Text style={styles.statsCount}>{followers}</Text>
-              <Text style={styles.statsText}> followers</Text>
-            </View>
-            <View style={styles.userStatsItem}>
-              <Text style={styles.statsCount}>{followings} </Text>
-              <Text style={styles.statsText}>following</Text>
-            </View>
-          </View>
+        <View style={styles.buttonsContainer}>
+          <TouchableOpacity style={styles.button} onPress={logout}>
+            <Text style={styles.buttonText}>Logout</Text>
+          </TouchableOpacity>
         </View>
-      </View>
-
-      <View style={styles.profileInfo}>
-        <View style={styles.bioContainer}>
-          <View style={styles.bioTextContainer}>
-            <Text style={styles.bioLabel}>Akash levelup</Text>
-            <TouchableOpacity
-              style={styles.updateBioButton}
-              onPress={updateBio}
-            >
-              <Text style={styles.updateBioButtonText}>Edit Profile</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-
-      {/* Render the Tab.Navigator outside the ScrollView */}
-      <Tab.Navigator>
-        <Tab.Screen
-          name="Posts"
-          component={() => <ImagesScreen posts={imagePosts} />}
-          options={{
-            // tabBarLabel:"",
-            tabBarIcon: ({ color, size }) => (
-              <MaterialCommunityIcons name="grid" size={24} color="black" />
-            ),
-          }}
-        />
-        <Tab.Screen
-          name="Tweets"
-          component={() => <TweetsScreen posts={tweetPosts} />}
-          options={{
-            // tabBarLabel:"",
-            tabBarIcon: ({ color, size }) => (
-              <MaterialCommunityIcons
-                name="message-text"
-                size={24}
-                color="black"
-              />
-            ),
-          }}
-        />
-        <Tab.Screen
-          name="Tag"
-          component={() => <TweetsScreen posts={tweetPosts} />}
-          options={{
-            // tabBarLabel:"",
-            tabBarIcon: ({ color, size }) => (
-              <MaterialIcons name="tag" size={24} color="black" />
-            ),
-          }}
-        />
-      </Tab.Navigator>
-
-      <View style={styles.buttonsContainer}>
-        <TouchableOpacity style={styles.button} onPress={logout}>
-          <Text style={styles.buttonText}>Logout</Text>
-        </TouchableOpacity>
-      </View>
-      {/* </ScrollView> */}
-    </View>
+        {/* </ScrollView> */}
+      </SafeAreaView>
+    </>
   );
 };
 
@@ -245,10 +310,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginVertical: 20,
-    paddingHorizontal: 10,
-    paddingTop: 10,
-    backgroundColor: "white",
+    paddingHorizontal: 16,
+    paddingTop: 35,
+    paddingBottom: 4,
+    // borderBottomWidth:1,
+    // borderBottomColor:"#e0e0e0",
+    zIndex: 10,
+    backgroundColor: "#fff",
   },
   profileTop: {
     flexDirection: "row",

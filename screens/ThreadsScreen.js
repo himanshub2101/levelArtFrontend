@@ -13,14 +13,14 @@ import {
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import axios from "axios";
-import { Entypo } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import jwt_decode from "jwt-decode";
-import { Feather } from "@expo/vector-icons";
+import { Feather, MaterialIcons } from "@expo/vector-icons";
 const ThreadsScreen = () => {
   const [content, setContent] = useState("");
   const [image, setImage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isImageSelected, setIsImageSelected] = useState(false);
 
   const handleImagePicker = async () => {
     const permissionResult =
@@ -35,9 +35,14 @@ const ThreadsScreen = () => {
       console.log("Selected image URI:", pickerResult.assets[0].uri); // Log the URI of the selected image
 
       setImage(pickerResult.assets[0].uri);
+      setIsImageSelected(true);
     } else {
       console.log("Image picking cancelled or no image selected");
     }
+  };
+  const handleImageCancel = () => {
+    setImage(null);
+    setIsImageSelected(false);
   };
 
   const handlePostSubmit = async () => {
@@ -96,7 +101,8 @@ const ThreadsScreen = () => {
         </TouchableOpacity>
       </View>
       <View style={styles.middleContainer}>
-        <Image source={{}} style={styles.ProfileImage} />
+      <View style={styles.middleContainerTop}>
+        <Image source={require('../assets/avatar.png')} style={styles.ProfileImage} />
         <TextInput
           value={content}
           onChangeText={setContent}
@@ -105,6 +111,16 @@ const ThreadsScreen = () => {
           style={styles.input}
         />
       </View>
+       
+          {isImageSelected && (
+        <View style={{paddingHorizontal:10,paddingVertical:10,flex:1,position:'relative'}}>
+          <Image source={{uri:image}} style={{height:300}}/>
+          <TouchableOpacity onPress={handleImageCancel} style={{position:"absolute",bottom:-3,right:-3}}>
+          <MaterialIcons name="cancel" size={24} color="black" />
+          </TouchableOpacity>
+        </View>
+          )}
+        </View>
       {/* <View style={{ flex: 1}}>
  
         <Button
@@ -175,9 +191,15 @@ const styles = StyleSheet.create({
   middleContainer: {
     paddingHorizontal: 10,
     paddingVertical: 10,
+    
+  },
+  middleContainerTop: {
+    paddingHorizontal: 10,
+    paddingVertical: 10,
     flexDirection: "row",
     gap: 10,
   },
+
   ProfileImage: {
     width: 45,
     height: 45,
