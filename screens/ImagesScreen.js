@@ -1,6 +1,13 @@
 // ImagesScreen.js
 import React from "react";
-import { View, Text, FlatList, Image, StyleSheet, Dimensions } from "react-native";
+import {
+  View,
+  Text,
+  FlatList,
+  Image,
+  StyleSheet,
+  Dimensions,
+} from "react-native";
 
 const ImagesScreen = ({ posts }) => {
   const renderPostItem = ({ item }) => (
@@ -33,12 +40,12 @@ const styles = StyleSheet.create({
   },
   postsList: {
     flexGrow: 1,
-    padding: 15,
+    // padding: 15,
   },
   postWrapper: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    // flex: 1,
+    // justifyContent: "center",
+    // alignItems: "center",
     margin: 2,
   },
   postImage: {

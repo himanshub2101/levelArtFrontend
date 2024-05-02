@@ -1,4 +1,11 @@
-import { StyleSheet, Text, View, ActivityIndicator ,SafeAreaView, KeyboardAvoidingView } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  ActivityIndicator,
+  SafeAreaView,
+  KeyboardAvoidingView,
+} from "react-native";
 import React, { useEffect, useState } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import LoginScreen from "./screens/LoginScreen";
@@ -16,11 +23,12 @@ import AsyncStorage from "@react-native-async-storage/async-storage"; // Import 
 import SettingsScreen from "./screens/SettingsScreen";
 import AccountsCenterScreen from "./screens/AccountCenter";
 import SearchScreen from "./screens/SearchScreen";
-import ArtistForm from "./components/forms/artist"
-import ProductionForm from "./components/forms/production"
-import VisitorsForm from "./components/forms/visitors"
+import ArtistForm from "./components/forms/artist";
+import ProductionForm from "./components/forms/production";
+import VisitorsForm from "./components/forms/visitors";
 import ImagesScreen from "./screens/ImagesScreen";
 import TweetsScreen from "./screens/TweetsScreen";
+import EditProfileScreen from "./screens/EditProfileScreen";
 
 const StackNavigator = () => {
   const Stack = createNativeStackNavigator();
@@ -50,8 +58,7 @@ const StackNavigator = () => {
 
   // Define BottomTabs component here
   const BottomTabs = () => (
-<Tab.Navigator
->
+    <Tab.Navigator>
       <Tab.Screen
         name="Home"
         component={HomeScreen}
@@ -128,12 +135,11 @@ const StackNavigator = () => {
         }}
       />
     </Tab.Navigator>
-
   );
 
   return (
     <NavigationContainer>
-     <Stack.Navigator>
+      <Stack.Navigator>
         {authToken ? (
           <>
             <Stack.Screen
@@ -144,7 +150,6 @@ const StackNavigator = () => {
             <Stack.Screen
               name="Settings"
               component={SettingsScreen}
-              options={{ headerShown: false }}
             />
             <Stack.Screen
               name="AccountsCenter"
@@ -160,6 +165,11 @@ const StackNavigator = () => {
               name="TweetsScreen"
               component={TweetsScreen}
               options={{ headerShown: false }}
+            />
+             <Stack.Screen
+              name="EditProfile"
+              component={EditProfileScreen}
+              // options={{ headerShown: false }}
             />
           </>
         ) : (
@@ -189,6 +199,12 @@ const StackNavigator = () => {
               component={ProductionForm}
               options={{ headerShown: false }}
             />
+            <Stack.Screen
+              name="Main"
+              component={BottomTabs}
+              options={{ headerShown: false }}
+            />
+           
           </>
         )}
       </Stack.Navigator>
@@ -202,7 +218,6 @@ const LoadingIndicator = () => (
     <ActivityIndicator size="large" color="#0000ff" />
   </View>
 );
-
 
 const styles = StyleSheet.create({
   loadingContainer: {
