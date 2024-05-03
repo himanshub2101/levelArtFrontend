@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   Image,
   KeyboardAvoidingView,
@@ -8,34 +8,89 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { Picker } from "@react-native-picker/picker";
 import { useNavigation } from "@react-navigation/native";
+import axios from 'axios';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { UserType } from "../UserContext";
 
 const EditProfileScreen = () => {
   const navigation = useNavigation();
-  //   const [image, setImage] = useState(null);
-  const [userProfileData, setUserProfileData] = useState({
-    image: "",
-    name: "",
-    editprofileusername: "",
-    pronouns: "",
-    bio: "",
-    gender: "",
-  });
+  const { userId, setUserId } = useContext(UserType);
+  const [userProfile, setUserProfille] = useState(null);
+  const [profilePicUploaded, setProfilePicUploaded] = useState(false);
+  
+  useEffect(()=>{
+ const fetchUpdateUser = async(userId)=>{
+  try{
 
-  const handleSubmitProfileData = () => {
+    const authToken = await AsyncStorage.getItem("authToken");
+    const GetUser = await axios.get(
+      `https://levelart.up.railway.app/users/${userId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      }
+      
+    )
+    setUserProfille(GetUser.data);
+    console.log( 'all user',GetUser.data)
+  }
+  catch(error) {
+    console.error("Error fetching replies:", error);
+  };
+}
+if (userId) {
+  fetchUpdateUser(userId);
+} else {
+  console.log("userId is undefined");
+}
+},[userId])
+
+ const EditProfile = async () => {
+    try {
+      console.log("edit profile user id", userId);
+      const authToken = await AsyncStorage.getItem("authToken");
+
+      await axios.put(
+        `https://levelart.up.railway.app/users/${userId}`,
+        userProfileData ,
+        {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        }
+      );
+      console.log("Bio updated successfully",userProfileData);
+    } catch (error) {
+      console.error("Error updating bio:", error.massge);
+    }
     navigation.navigate("Profile", { userProfileData });
     console.log(
-      userProfileData.image,
-      userProfileData.name,
-      userProfileData.editprofileusername,
+      userProfileData.profilePic,
+      userProfileData.fullname,
+      userProfileData.username,
       userProfileData.pronouns,
       userProfileData.bio,
       userProfileData.gender
     );
   };
+ 
+
+  const [userProfileData, setUserProfileData] = useState({
+    profilePic: "",
+    fullname: "",
+    username: "",
+    pronouns: "",
+    bio: "",
+    gender: "",
+  });
+
+
 
   const handleImagePicker = async () => {
     const permissionResult =
@@ -51,8 +106,9 @@ const EditProfileScreen = () => {
 
       setUserProfileData({
         ...userProfileData,
-        image: pickerResult.assets[0].uri,
+        profilePic: pickerResult.assets[0].uri,
       });
+      setProfilePicUploaded(true);
     } else {
       console.log("Image picking cancelled or no image selected");
     }
@@ -62,16 +118,28 @@ const EditProfileScreen = () => {
     <>
       <SafeAreaView style={styles.editProfileContainer}>
         <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={{ flex: 1 }}
         >
+        
           <View style={styles.editProfileTop}>
             <TouchableOpacity onPress={handleImagePicker}>
-              {userProfileData.image ? (
+            {profilePicUploaded ?(
+          <ActivityIndicator size="large" color="#0000ff" />
+        ):(
+
+               userProfile?.data && userProfile?.data.profilePic ? (
                 <Image
                   style={styles.profileImage}
                   source={{
-                    uri: userProfileData.image,
+                    uri: userProfile?.data.profilePic,
+                  }}
+                />
+              ) :
+                userProfileData && userProfileData.profilePic ? (
+                <Image
+                  style={styles.profileImage}
+                  source={{
+                    uri: userProfileData.profilePic,
                   }}
                 />
               ) : (
@@ -81,7 +149,9 @@ const EditProfileScreen = () => {
                     uri: "https://cdn-icons-png.flaticon.com/128/149/149071.png",
                   }}
                 />
+              )
               )}
+        
             </TouchableOpacity>
             <TouchableOpacity
               onPress={handleImagePicker}
@@ -90,29 +160,30 @@ const EditProfileScreen = () => {
               <Text style={{ fontWeight: "500" }}>Edit picture</Text>
             </TouchableOpacity>
           </View>
-
           <View style={styles.editProfileTextInputContainer}>
             <Text>Name</Text>
             <TextInput
-              value={userProfileData.name}
+              value={userProfileData.fullname}
               onChangeText={(text) =>
-                setUserProfileData({ ...userProfileData, name: text })
+                setUserProfileData({ ...userProfileData, fullname: text })
               }
               placeholderTextColor={"gray"}
+              placeholder={userProfile?.data?.fullname ? userProfile.data.fullname : ""}
               style={styles.editProfileTextInput}
             />
           </View>
           <View style={styles.editProfileTextInputContainer}>
             <Text>Username</Text>
             <TextInput
-              value={userProfileData.editprofileusername}
+              value={userProfileData.username}
               onChangeText={(text) =>
                 setUserProfileData({
                   ...userProfileData,
-                  editprofileusername: text,
+                  username: text,
                 })
               }
               placeholderTextColor={"gray"}
+              placeholder={userProfile?.data?.username ? userProfile.data.username : ""}
               style={styles.editProfileTextInput}
             />
           </View>
@@ -124,6 +195,7 @@ const EditProfileScreen = () => {
                 setUserProfileData({ ...userProfileData, pronouns: text })
               }
               placeholderTextColor={"gray"}
+              placeholder={userProfile?.data?.pronouns ? userProfile.data.pronouns : ""}
               style={styles.editProfileTextInput}
             />
           </View>
@@ -135,6 +207,7 @@ const EditProfileScreen = () => {
                 setUserProfileData({ ...userProfileData, bio: text })
               }
               placeholderTextColor={"gray"}
+              placeholder={userProfile?.data?.bio ? userProfile.data.bio : ""}
               style={styles.editProfileTextInput}
             />
           </View>
@@ -161,7 +234,7 @@ const EditProfileScreen = () => {
             }}
           >
             <TouchableOpacity
-              onPress={handleSubmitProfileData}
+              onPress={EditProfile}
               style={{
                 backgroundColor: "#000",
                 paddingHorizontal: 20,

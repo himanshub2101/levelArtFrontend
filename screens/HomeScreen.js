@@ -1,4 +1,10 @@
-import React, { useEffect, useContext, useState, useCallback } from "react";
+import React, {
+  useEffect,
+  useContext,
+  useState,
+  useCallback,
+  useLayoutEffect,
+} from "react";
 import {
   StyleSheet,
   Text,
@@ -29,8 +35,10 @@ import { UserType } from "../UserContext";
 import MessageContainer from "../components/messageContainer"; // Import MessageContainer component
 import AnimatedMessage from "../components/AnimatedMessage"; // Import AnimatedMessage component
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 
 const HomeScreen = ({ route }) => {
+  const navigation = useNavigation();
   const { userId, setUserId } = useContext(UserType);
   const [posts, setPosts] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -255,6 +263,35 @@ const HomeScreen = ({ route }) => {
     setShowAnimatedMessage(false);
   };
 
+ useLayoutEffect(() => {
+  navigation.setOptions({
+    headerTitle: "",
+    headerLeft: () => (
+      <Image
+        style={{
+          width: 60,
+          height: 45,
+          resizeMode: "contain",
+          // marginLeft: 10,
+          marginTop:19,
+          overflow:'hidden',
+        }}
+        source={logo}
+      />
+    ),
+    headerRight: () => (
+      <TouchableOpacity
+        style={{
+          marginRight: 10,
+        }}
+        onPress={() => navigation.navigate("All Friend list")} 
+      >
+<Ionicons name="chatbox-ellipses-outline" size={24} color="black" />
+      </TouchableOpacity>
+    ),
+  });
+}, []);
+
   const renderPost = (post, index) => {
     return (
       <View key={post._id} style={styles.post}>
@@ -370,12 +407,6 @@ const HomeScreen = ({ route }) => {
   ]);
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.navBar}>
-        <Image style={styles.logo} source={logo} />
-        <TouchableOpacity style={styles.chatIconContainer}>
-          <Ionicons name="chatbubble-outline" size={24} color="black" />
-        </TouchableOpacity>
-      </View>
       <ScrollView
         style={styles.scrollView}
         refreshControl={
@@ -495,7 +526,9 @@ const HomeScreen = ({ route }) => {
                         <Text style={styles.commentText}>
                           {comment.comment}
                         </Text>
-                        <TouchableOpacity style={{paddingVertical:5,paddingLeft:5}}>
+                        <TouchableOpacity
+                          style={{ paddingVertical: 5, paddingLeft: 5 }}
+                        >
                           <AntDesign name={"hearto"} size={18} color={"gray"} />
                         </TouchableOpacity>
                       </View>
@@ -658,8 +691,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
-  commentText:{
-  flex:1,
+  commentText: {
+    flex: 1,
   },
   rightSideContainer: {
     flex: 1,

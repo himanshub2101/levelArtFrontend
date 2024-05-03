@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState, useContext, useLayoutEffect } from "react";
 import {
   StyleSheet,
   View,
@@ -39,7 +39,7 @@ const ProfileScreen = () => {
   const [replies, setReplies] = useState([]);
   const [bio, setBio] = useState("");
   const [image, setImage] = useState(null);
-
+  const [userProfile, setUserProfille] = useState("");
   const route = useRoute();
   const userEditProfileData = route.params?.userProfileData;
 
@@ -66,6 +66,16 @@ const ProfileScreen = () => {
     const fetchProfile = async (userId) => {
       try {
         const authToken = await AsyncStorage.getItem("authToken");
+
+        const GetUser = await axios.get(
+          `https://levelart.up.railway.app/users/${userId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+            },
+          }
+        );
+        setUserProfille(GetUser);
 
         const profileResponse = await axios
           .get(
@@ -99,24 +109,25 @@ const ProfileScreen = () => {
 
           if (postsResponse) {
             setPosts(postsResponse.data);
+            console.log("post user", postsResponse.data);
           }
 
-          const repliesResponse = await axios
-            .get(
-              `https://levelart.up.railway.app/posts/user/${userId}/replies`,
-              {
-                headers: {
-                  Authorization: `Bearer ${authToken}`,
-                },
-              }
-            )
-            .catch((error) => {
-              console.error("Error fetching replies:", error);
-            });
+          // const repliesResponse = await axios
+          //   .get(
+          //     `https://levelart.up.railway.app/posts/user/${userId}/replies`,
+          //     {
+          //       headers: {
+          //         Authorization: `Bearer ${authToken}`,
+          //       },
+          //     }
+          //   )
+          //   .catch((error) => {
+          //     console.error("Error fetching replies:", error);
+          //   });
 
-          if (repliesResponse) {
-            setReplies(repliesResponse.data);
-          }
+          // if (repliesResponse) {
+          //   setReplies(repliesResponse.data);
+          // }
         }
       } catch (error) {
         console.error("Error fetching profile:", error);
@@ -147,45 +158,43 @@ const ProfileScreen = () => {
   //   navigation.navigate("EditProfile");
   // };
 
-  // const EditProfile = async () => {
-  //   try {
-  //     const authToken = await AsyncStorage.getItem("authToken");
-  //     await axios.put(
-  //       `https://levelart.up.railway.app/user/${userId}`,
-  //       { bio },
-  //       {
-  //         headers: {
-  //           Authorization: `Bearer ${authToken}`,
-  //         },
-  //       }
-  //     );
-  //     console.log("Bio updated successfully");
-  //   } catch (error) {
-  //     console.error("Error updating bio:", error);
-  //   }
-  // };
-
   // Filter posts based on whether they contain images
   const imagePosts = posts.filter((post) => post.img); // Filter posts with images
   const tweetPosts = posts.filter((post) => !post.img); // Filter posts without images
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerTitle: "",
+      headerLeft: () =>
+     userProfile && userProfile.username ? 
+      (<Text style={{ marginLeft: 10, fontWeight: 500, fontSize: 18 }}>
+      {userProfile.username}
+    </Text>)
+    //  : userEditProfileData && userEditProfileData.username ? (
+    //       <Text style={{ marginLeft: 10, fontWeight: 500, fontSize: 18 }}>
+    //         {userEditProfileData.username}
+    //       </Text>
+    //     ) 
+    : (
+          <Text style={{ marginLeft: 10, fontWeight: 500, fontSize: 18 }}>
+            User Name
+          </Text>
+        ),
+      headerRight: () => (
+        <TouchableOpacity
+          style={styles.settingsIcon}
+          onPress={() => navigation.navigate("Settings")}
+        >
+          <Icon name="settings-outline" size={30} color="#333" />
+        </TouchableOpacity>
+      ),
+    });
+  }, []);
 
   return (
     <>
       <SafeAreaView style={styles.container}>
         {/* <ScrollView> */}
-        <View style={styles.profileHeader}>
-          {userEditProfileData && userEditProfileData.editprofileusername ? (
-            <Text>{userEditProfileData.editprofileusername}</Text>
-          ) : (
-            <Text>User Name</Text>
-          )}
-          <TouchableOpacity
-            style={styles.settingsIcon}
-            onPress={()=>navigation.navigate("Settings")}
-          >
-            <Icon name="settings-outline" size={30} color="#333" />
-          </TouchableOpacity>
-        </View>
         <View style={styles.profileTop}>
           <View style={styles.userInfo}>
             <TouchableOpacity
@@ -194,10 +203,10 @@ const ProfileScreen = () => {
             >
               {image ? (
                 <Image style={styles.profileImage} source={{ uri: image }} />
-              ) : userEditProfileData && userEditProfileData.image ? (
+              ) : userEditProfileData && userEditProfileData.profilePic ? (
                 <Image
                   style={styles.profileImage}
-                  source={{ uri: userEditProfileData.image }}
+                  source={{ uri: userEditProfileData.profilePic }}
                 />
               ) : (
                 <Image
@@ -237,14 +246,27 @@ const ProfileScreen = () => {
         <View style={styles.profileInfo}>
           <View style={styles.bioContainer}>
             <View style={styles.bioTextContainer}>
-              {userEditProfileData && userEditProfileData.name ? (
-                <Text style={styles.bioLabel}>{userEditProfileData.name}</Text>
-              ) : (
-                <Text style={styles.bioLabel}>Akash Saini</Text>
-              )}
+              <View style={{ flexDirection: "row", gap: 20 }}>
+                {userEditProfileData && userEditProfileData.name ? (
+                  <Text style={styles.bioLabel}>
+                    {userEditProfileData.name}
+                  </Text>
+                ) : (
+                  <Text style={styles.bioLabel}>Akash Saini</Text>
+                )}
+                {userEditProfileData && userEditProfileData.pronouns ? (
+                  <Text>{userEditProfileData.pronouns}</Text>
+                ) : null}
+              </View>
+              {userEditProfileData && userEditProfileData.bio ? (
+                <View>
+                  <Text>{userEditProfileData.bio}</Text>
+                </View>
+              ) : null}
+
               <TouchableOpacity
                 style={styles.updateBioButton}
-                onPress={()=>navigation.navigate("EditProfile")}
+                onPress={() => navigation.navigate("EditProfile")}
               >
                 <Text style={styles.updateBioButtonText}>Edit Profile</Text>
               </TouchableOpacity>
@@ -330,7 +352,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   settingsIcon: {
-    marginLeft: "auto",
+    marginRight: 10,
   },
   profileInfo: {
     flexDirection: "column",
@@ -385,6 +407,7 @@ const styles = StyleSheet.create({
   },
   userInfo: {
     flexDirection: "row",
+    flex:1,
   },
   userStats: {
     marginLeft: 20,
