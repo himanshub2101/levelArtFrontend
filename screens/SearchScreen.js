@@ -24,7 +24,7 @@ const SearchScreen = () => {
     try {
       setLoading(true);
       // Make HTTP request to backend API using Axios
-      const response = await axios.get(`https://levelart.up.railway.app/search/user?username=${searchQuery}`);
+      const response = await axios.get(`https://levelart.up.railway.app/search/users?username=${searchQuery}`);
       setSearchResults(response.data.data); // Update this line
     } catch (error) {
       console.error('Error searching:', error.message);

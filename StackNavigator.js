@@ -65,7 +65,7 @@ const StackNavigator = () => {
         options={{
           tabBarLabel: "Home",
           tabBarLabelStyle: { color: "black" },
-          headerShown: false,
+          headerShown: true,
           tabBarIcon: ({ focused }) =>
             focused ? (
               <Entypo name="home" size={24} color="black" />
@@ -125,7 +125,7 @@ const StackNavigator = () => {
         options={{
           tabBarLabel: "Profile",
           tabBarLabelStyle: { color: "black" },
-          headerShown: false,
+          headerShown: true,
           tabBarIcon: ({ focused }) =>
             focused ? (
               <Ionicons name="person" size={24} color="black" />
@@ -147,10 +147,7 @@ const StackNavigator = () => {
               component={BottomTabs}
               options={{ headerShown: false }}
             />
-            <Stack.Screen
-              name="Settings"
-              component={SettingsScreen}
-            />
+            <Stack.Screen name="Settings" component={SettingsScreen} />
             <Stack.Screen
               name="AccountsCenter"
               component={AccountsCenterScreen}
@@ -166,7 +163,7 @@ const StackNavigator = () => {
               component={TweetsScreen}
               options={{ headerShown: false }}
             />
-             <Stack.Screen
+            <Stack.Screen
               name="EditProfile"
               component={EditProfileScreen}
               // options={{ headerShown: false }}
@@ -204,7 +201,11 @@ const StackNavigator = () => {
               component={BottomTabs}
               options={{ headerShown: false }}
             />
-           
+            <Stack.Screen
+              name="EditProfile"
+              component={EditProfileScreen}
+              // options={{ headerShown: false }}
+            /> 
           </>
         )}
       </Stack.Navigator>

@@ -271,9 +271,9 @@ const RegisterScreen = () => {
                   color: "gray",
                   marginVertical: 10,
                   width: 300,
-                  fontSize: email ? 16 : 16,
+                  fontSize: username ? 16 : 16,
                 }}
-                placeholder="Enter your name"
+                placeholder="Enter your user name"
               />
             </View>
             {nameError.isError && (
