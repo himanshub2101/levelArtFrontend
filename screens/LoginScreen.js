@@ -9,6 +9,7 @@ import {
   TextInput,
   Pressable,
   Alert,
+  TouchableOpacity,
 } from "react-native";
 import React, { useState, useEffect } from "react";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -17,7 +18,8 @@ import { useNavigation } from "@react-navigation/native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import logo from '../assets/logo.png';
-
+import facebooklogo from '../assets/facebookLogo.png';
+import GoogleLogo from '../assets/googleLogo.png';
 // Define the LoginScreen component
 const LoginScreen = () => {
   // Define state variables
@@ -294,6 +296,14 @@ const LoginScreen = () => {
             Don't have an account? Sign up
           </Text>
         </Pressable>
+        <View style={{flexDirection:"row",flex:1,gap:40,justifyContent:"center",marginTop:20}}>
+          <TouchableOpacity style={{backgroundColor:"#fff",borderColor:'#e0e0e0', borderRadius:50,borderWidth:1,width:43,height:43,justifyContent:"center",alignItems:"center"}}>
+            <Image source={GoogleLogo} style={{width:40, height:40 ,overflow:'hidden',borderRadius:50}}/>
+          </TouchableOpacity>
+          <TouchableOpacity >
+            <Image source={facebooklogo} style={{width:40, height:40,overflow:'hidden',borderRadius:50}}/>
+          </TouchableOpacity>
+        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

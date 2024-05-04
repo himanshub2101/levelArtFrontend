@@ -11,26 +11,31 @@ import {
   Alert,
   ScrollView,
   Platform,
+  TouchableOpacity,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { AntDesign } from "@expo/vector-icons";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { Picker } from "@react-native-picker/picker";
-
+import facebooklogo from "../assets/facebookLogo.png";
+import GoogleLogo from "../assets/googleLogo.png";
 import logo from "../assets/logo.png";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import ArtistForm from "../components/forms/artist";
 import VisitorsForm from "../components/forms/visitors";
 import ProductionForm from "../components/forms/production";
+// import * as AuthSession from "expo-auth-session";
+// import * as Facebook from "expo-facebook";
+
 const RegisterScreen = () => {
   const [username, setUserName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmpassword, setConfirmPassword] = useState("");
   const [phonenumber, setPhoneNumber] = useState("");
-  const [userType, setUserType] = useState("artist"); // Default user type is artist
+  const [userType, setUserType] = useState("artist");
   const [nameError, setNameError] = useState({ isError: false, message: "" });
   const [emailError, setEmailError] = useState({ isError: false, message: "" });
   const [passwordError, setPasswordError] = useState({
@@ -45,6 +50,42 @@ const RegisterScreen = () => {
     isError: false,
     message: "",
   });
+
+  const handleGoogleLogin = async () => {
+    // try {
+    //   const { type, accessToken, user } = await AuthSession.startAsync({
+    //     authUrl:
+    //       "https://accounts.google.com/o/oauth2/v2/auth" +
+    //       "?client_id=YOUR_GOOGLE_CLIENT_ID" +
+    //       "&redirect_uri=YOUR_REDIRECT_URI" +
+    //       "&response_type=token" +
+    //       "&scope=email profile",
+    //   });
+    //   if (type === "success") {
+    //     // Handle successful Google login
+    //     console.log("Google login successful", { accessToken, user });
+    //   }
+    // } catch (error) {
+    //   console.error("Google login error", error);
+    // }
+  };
+
+  const handleFacebookLogin = async () => {
+    // try {
+    //   await Facebook.initializeAsync({
+    //     appId: "YOUR_FACEBOOK_APP_ID",
+    //   });
+    //   const { type, token } = await Facebook.logInWithReadPermissionsAsync({
+    //     permissions: ["public_profile", "email"],
+    //   });
+    //   if (type === "success") {
+    //     // Handle successful Facebook login
+    //     console.log("Facebook login successful", token);
+    //   }
+    // } catch (error) {
+    //   console.error("Facebook login error", error);
+    // }
+  };
 
   const navigation = useNavigation();
 
@@ -246,17 +287,7 @@ const RegisterScreen = () => {
 
         <View style={{ marginTop: 40, gap: 10 }}>
           <View>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 5,
-                borderColor: "#D0D0D0",
-                borderWidth: 1,
-                paddingVertical: 5,
-                borderRadius: 5,
-              }}
-            >
+            <View style={styles.inputContainer}>
               <Ionicons
                 style={{ marginLeft: 8 }}
                 name="person"
@@ -267,12 +298,7 @@ const RegisterScreen = () => {
                 value={username}
                 onChangeText={handleNameChange}
                 placeholderTextColor={"gray"}
-                style={{
-                  color: "gray",
-                  marginVertical: 10,
-                  width: 300,
-                  fontSize: username ? 16 : 16,
-                }}
+                style={styles.input}
                 placeholder="Enter your user name"
               />
             </View>
@@ -281,17 +307,7 @@ const RegisterScreen = () => {
             )}
           </View>
           <View>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 5,
-                borderColor: "#D0D0D0",
-                borderWidth: 1,
-                paddingVertical: 5,
-                borderRadius: 5,
-              }}
-            >
+            <View style={styles.inputContainer}>
               <MaterialIcons
                 style={{ marginLeft: 8 }}
                 name="email"
@@ -302,12 +318,7 @@ const RegisterScreen = () => {
                 value={email}
                 onChangeText={handleEmailChange}
                 placeholderTextColor={"gray"}
-                style={{
-                  color: "gray",
-                  marginVertical: 10,
-                  width: 300,
-                  fontSize: email ? 16 : 16,
-                }}
+                style={styles.input}
                 placeholder="enter your Email"
               />
             </View>
@@ -316,17 +327,7 @@ const RegisterScreen = () => {
             )}
           </View>
           <View>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 5,
-                borderColor: "#D0D0D0",
-                borderWidth: 1,
-                paddingVertical: 5,
-                borderRadius: 5,
-              }}
-            >
+            <View style={styles.inputContainer}>
               <AntDesign
                 style={{ marginLeft: 8 }}
                 name="lock"
@@ -338,12 +339,7 @@ const RegisterScreen = () => {
                 value={password}
                 onChangeText={handlePasswordChange}
                 placeholderTextColor={"gray"}
-                style={{
-                  color: "gray",
-                  marginVertical: 10,
-                  width: 300,
-                  fontSize: password ? 16 : 16,
-                }}
+                style={styles.input}
                 placeholder="enter your Password"
               />
             </View>
@@ -352,17 +348,7 @@ const RegisterScreen = () => {
             )}
           </View>
           <View>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 5,
-                borderColor: "#D0D0D0",
-                borderWidth: 1,
-                paddingVertical: 5,
-                borderRadius: 5,
-              }}
-            >
+            <View style={styles.inputContainer}>
               <AntDesign
                 style={{ marginLeft: 8 }}
                 name="lock"
@@ -374,12 +360,7 @@ const RegisterScreen = () => {
                 value={confirmpassword}
                 onChangeText={handleConfirmPasswordChange}
                 placeholderTextColor={"gray"}
-                style={{
-                  color: "gray",
-                  marginVertical: 10,
-                  width: 300,
-                  fontSize: password ? 16 : 16,
-                }}
+                style={styles.input}
                 placeholder="Confirm Password"
               />
             </View>
@@ -390,17 +371,7 @@ const RegisterScreen = () => {
             )}
           </View>
           <View>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 5,
-                borderColor: "#D0D0D0",
-                borderWidth: 1,
-                paddingVertical: 5,
-                borderRadius: 5,
-              }}
-            >
+            <View style={styles.inputContainer}>
               <MaterialIcons
                 style={{ marginLeft: 8 }}
                 name="phone"
@@ -452,7 +423,7 @@ const RegisterScreen = () => {
               width: 200,
               backgroundColor: pressed ? "gray" : "black",
               padding: 15,
-              marginTop: 40,
+              marginTop: 5,
               marginLeft: "auto",
               marginRight: "auto",
               borderRadius: 6,
@@ -479,6 +450,50 @@ const RegisterScreen = () => {
             Already have an account? Sign In
           </Text>
         </Pressable>
+        <View
+          style={{
+            flexDirection: "row",
+            flex: 1,
+            gap: 40,
+            justifyContent: "center",
+            marginTop: 20,
+          }}
+        >
+          <TouchableOpacity
+            onPress={handleGoogleLogin}
+            style={{
+              backgroundColor: "#fff",
+              borderColor: "#e0e0e0",
+              borderRadius: 50,
+              borderWidth: 1,
+              width: 43,
+              height: 43,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Image
+              source={GoogleLogo}
+              style={{
+                width: 40,
+                height: 40,
+                overflow: "hidden",
+                borderRadius: 50,
+              }}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleFacebookLogin}>
+            <Image
+              source={facebooklogo}
+              style={{
+                width: 40,
+                height: 40,
+                overflow: "hidden",
+                borderRadius: 50,
+              }}
+            />
+          </TouchableOpacity>
+        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -508,19 +523,17 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    borderWidth: 1,
+    gap: 5,
     borderColor: "#D0D0D0",
-    borderRadius: 5,
+    borderWidth: 1,
     paddingVertical: 5,
-    paddingHorizontal: 10,
-    marginTop: 10,
-    width: "100%",
-    height: 50,
+    borderRadius: 5,
   },
 
   input: {
-    flex: 1,
     color: "gray",
+    marginVertical: 10,
+    width: 300,
     fontSize: 16,
   },
   button: {

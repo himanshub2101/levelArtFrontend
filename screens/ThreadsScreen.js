@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   StyleSheet,
   Text,
@@ -16,11 +16,42 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import jwt_decode from "jwt-decode";
 import { Feather, MaterialIcons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { UserType } from "../UserContext";
+
 const ThreadsScreen = () => {
+  const navigation = useNavigation();
   const [content, setContent] = useState("");
   const [image, setImage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isImageSelected, setIsImageSelected] = useState(false);
+  const { userId, setUserId } = useContext(UserType);
+  const [userProfile, setUserProfile] = useState(null);
+
+  useEffect(() => {
+    const fetchUpdateUser = async (userId) => {
+      try {
+        const authToken = await AsyncStorage.getItem("authToken");
+        const GetUser = await axios.get(
+          `https://levelart.up.railway.app/users/${userId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+            },
+          }
+        );
+        setUserProfile(GetUser.data);
+        console.log("post userProfile", userProfile);
+      } catch (error) {
+        console.error("Error fetching replies:", error);
+      }
+    };
+    if (userId) {
+      fetchUpdateUser(userId);
+    } else {
+      console.log("userId is undefined");
+    }
+  }, [userId]);
 
   const handleImagePicker = async () => {
     const permissionResult =
@@ -87,6 +118,7 @@ const ThreadsScreen = () => {
     } finally {
       setIsLoading(false);
     }
+    navigation.navigate("Home");
   };
 
   return (
@@ -101,26 +133,39 @@ const ThreadsScreen = () => {
         </TouchableOpacity>
       </View>
       <View style={styles.middleContainer}>
-      <View style={styles.middleContainerTop}>
-        <Image source={require('../assets/avatar.png')} style={styles.ProfileImage} />
-        <TextInput
-          value={content}
-          onChangeText={setContent}
-          placeholder="What's on your mind?"
-          multiline
-          style={styles.input}
-        />
+        <View style={styles.middleContainerTop}>
+          <Image
+            source={{ uri: userProfile?.profilePic }}
+            style={styles.ProfileImage}
+          />
+          <TextInput
+            value={content}
+            onChangeText={setContent}
+            placeholder="What's on your mind?"
+            multiline
+            style={styles.input}
+          />
+        </View>
+
+        {isImageSelected && (
+          <View
+            style={{
+              paddingHorizontal: 10,
+              paddingVertical: 10,
+              flex: 1,
+              position: "relative",
+            }}
+          >
+            <Image source={{ uri: image }} style={{ height: 300 }} />
+            <TouchableOpacity
+              onPress={handleImageCancel}
+              style={{ position: "absolute", bottom: -3, right: -3 }}
+            >
+              <MaterialIcons name="cancel" size={24} color="black" />
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
-       
-          {isImageSelected && (
-        <View style={{paddingHorizontal:10,paddingVertical:10,flex:1,position:'relative'}}>
-          <Image source={{uri:image}} style={{height:300}}/>
-          <TouchableOpacity onPress={handleImageCancel} style={{position:"absolute",bottom:-3,right:-3}}>
-          <MaterialIcons name="cancel" size={24} color="black" />
-          </TouchableOpacity>
-        </View>
-          )}
-        </View>
       {/* <View style={{ flex: 1}}>
  
         <Button
@@ -191,7 +236,6 @@ const styles = StyleSheet.create({
   middleContainer: {
     paddingHorizontal: 10,
     paddingVertical: 10,
-    
   },
   middleContainerTop: {
     paddingHorizontal: 10,
