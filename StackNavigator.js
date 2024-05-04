@@ -168,6 +168,11 @@ const StackNavigator = () => {
               component={EditProfileScreen}
               // options={{ headerShown: false }}
             />
+            <Stack.Screen
+              name="Login"
+              component={LoginScreen}
+              options={{ headerShown: false }}
+            />
           </>
         ) : (
           <>
@@ -201,11 +206,6 @@ const StackNavigator = () => {
               component={BottomTabs}
               options={{ headerShown: false }}
             />
-            <Stack.Screen
-              name="EditProfile"
-              component={EditProfileScreen}
-              // options={{ headerShown: false }}
-            /> 
           </>
         )}
       </Stack.Navigator>

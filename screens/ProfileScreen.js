@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext, useLayoutEffect } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import {
   StyleSheet,
   View,
@@ -25,8 +25,6 @@ import {
   MaterialIcons,
 } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
-import { useRoute } from "@react-navigation/native";
-
 const Tab = createMaterialTopTabNavigator();
 
 const ProfileScreen = () => {
@@ -38,10 +36,7 @@ const ProfileScreen = () => {
   const [posts, setPosts] = useState([]);
   const [replies, setReplies] = useState([]);
   const [bio, setBio] = useState("");
-  const [image, setImage] = useState(null);
-  const [userProfile, setUserProfille] = useState("");
-  const route = useRoute();
-  const userEditProfileData = route.params?.userProfileData;
+  const [userProfile, setUserProfile] = useState(null);
 
   const handleImagePicker = async () => {
     const permissionResult =
@@ -75,8 +70,8 @@ const ProfileScreen = () => {
             },
           }
         );
-        setUserProfille(GetUser);
-
+        setUserProfile(GetUser.data);
+        console.log("profile fetch", userProfile);
         const profileResponse = await axios
           .get(
             `https://levelart.up.railway.app/followers/${userId}/followers`,
@@ -141,15 +136,15 @@ const ProfileScreen = () => {
     }
   }, [userId]);
 
-  const logout = async () => {
-    try {
-      await AsyncStorage.removeItem("authToken");
-      console.log("Cleared auth token");
-      navigation.replace("Login");
-    } catch (error) {
-      console.error("Error clearing auth token:", error);
-    }
-  };
+  // const logout = async () => {
+  //   try {
+  //     await AsyncStorage.removeItem("authToken");
+  //     console.log("Cleared auth token");
+  //     navigation.replace("Login");
+  //   } catch (error) {
+  //     console.error("Error clearing auth token:", error);
+  //   }
+  // };
 
   // const handleSettingsPress = () => {
   //   navigation.navigate("Settings");
@@ -162,24 +157,14 @@ const ProfileScreen = () => {
   const imagePosts = posts.filter((post) => post.img); // Filter posts with images
   const tweetPosts = posts.filter((post) => !post.img); // Filter posts without images
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     navigation.setOptions({
       headerTitle: "",
-      headerLeft: () =>
-     userProfile && userProfile.username ? 
-      (<Text style={{ marginLeft: 10, fontWeight: 500, fontSize: 18 }}>
-      {userProfile.username}
-    </Text>)
-    //  : userEditProfileData && userEditProfileData.username ? (
-    //       <Text style={{ marginLeft: 10, fontWeight: 500, fontSize: 18 }}>
-    //         {userEditProfileData.username}
-    //       </Text>
-    //     ) 
-    : (
-          <Text style={{ marginLeft: 10, fontWeight: 500, fontSize: 18 }}>
-            User Name
-          </Text>
-        ),
+      headerLeft: () => (
+        <Text style={{ marginLeft: 10, fontWeight: 500, fontSize: 18 }}>
+          {userProfile?.username || "Loading..."}
+        </Text>
+      ),
       headerRight: () => (
         <TouchableOpacity
           style={styles.settingsIcon}
@@ -189,7 +174,8 @@ const ProfileScreen = () => {
         </TouchableOpacity>
       ),
     });
-  }, []);
+  }, [userProfile]);
+  
 
   return (
     <>
@@ -201,12 +187,10 @@ const ProfileScreen = () => {
               onPress={handleImagePicker}
               style={{ position: "relative" }}
             >
-              {image ? (
-                <Image style={styles.profileImage} source={{ uri: image }} />
-              ) : userEditProfileData && userEditProfileData.profilePic ? (
+              {userProfile?.profilePic ? (
                 <Image
                   style={styles.profileImage}
-                  source={{ uri: userEditProfileData.profilePic }}
+                  source={{ uri: userProfile?.profilePic }}
                 />
               ) : (
                 <Image
@@ -247,20 +231,18 @@ const ProfileScreen = () => {
           <View style={styles.bioContainer}>
             <View style={styles.bioTextContainer}>
               <View style={{ flexDirection: "row", gap: 20 }}>
-                {userEditProfileData && userEditProfileData.name ? (
-                  <Text style={styles.bioLabel}>
-                    {userEditProfileData.name}
-                  </Text>
+                {userProfile && userProfile?.fullname ? (
+                  <Text style={styles.bioLabel}>{userProfile?.fullname}</Text>
                 ) : (
-                  <Text style={styles.bioLabel}>Akash Saini</Text>
+                  <Text style={styles.bioLabel}>Full Name</Text>
                 )}
-                {userEditProfileData && userEditProfileData.pronouns ? (
-                  <Text>{userEditProfileData.pronouns}</Text>
+                {userProfile && userProfile?.pronouns ? (
+                  <Text>{userProfile?.pronouns}</Text>
                 ) : null}
               </View>
-              {userEditProfileData && userEditProfileData.bio ? (
+              {userProfile && userProfile?.bio ? (
                 <View>
-                  <Text>{userEditProfileData.bio}</Text>
+                  <Text>{userProfile?.bio}</Text>
                 </View>
               ) : null}
 
@@ -312,11 +294,11 @@ const ProfileScreen = () => {
           />
         </Tab.Navigator>
 
-        <View style={styles.buttonsContainer}>
+        {/* <View style={styles.buttonsContainer}>
           <TouchableOpacity style={styles.button} onPress={logout}>
             <Text style={styles.buttonText}>Logout</Text>
           </TouchableOpacity>
-        </View>
+        </View> */}
         {/* </ScrollView> */}
       </SafeAreaView>
     </>
@@ -407,7 +389,7 @@ const styles = StyleSheet.create({
   },
   userInfo: {
     flexDirection: "row",
-    flex:1,
+    flex: 1,
   },
   userStats: {
     marginLeft: 20,

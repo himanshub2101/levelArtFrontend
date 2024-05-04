@@ -51,7 +51,7 @@ const HomeScreen = ({ route }) => {
   const [savedPosts, setSavedPosts] = useState([]); // State to store saved posts
   const [showAnimatedMessage, setShowAnimatedMessage] = useState(false);
   const [animatedMessage, setAnimatedMessage] = useState("");
-
+  const [userProfile, setUserProfile] = useState(null);
   // State for tracking modal position
   const [ThreeDotmodalHeight, setThreeDotModalHeight] = useState(0);
   const [ThreeDotmodalPosition, setThreeDotModalPosition] = useState({
@@ -138,6 +138,17 @@ const HomeScreen = ({ route }) => {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       };
+
+      const GetUser = await axios.get(
+        `https://levelart.up.railway.app/users/${userId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setUserProfile(GetUser.data);
+      console.log("Home user", GetUser.data);
 
       const responseFollowings = await axios.get(
         `https://levelart.up.railway.app/followers/${userId}/following`,
@@ -263,43 +274,43 @@ const HomeScreen = ({ route }) => {
     setShowAnimatedMessage(false);
   };
 
- useLayoutEffect(() => {
-  navigation.setOptions({
-    headerTitle: "",
-    headerLeft: () => (
-      <Image
-        style={{
-          width: 60,
-          height: 45,
-          resizeMode: "contain",
-          // marginLeft: 10,
-          marginTop:19,
-          overflow:'hidden',
-        }}
-        source={logo}
-      />
-    ),
-    headerRight: () => (
-      <TouchableOpacity
-        style={{
-          marginRight: 10,
-        }}
-        onPress={() => navigation.navigate("All Friend list")} 
-      >
-<Ionicons name="chatbox-ellipses-outline" size={24} color="black" />
-      </TouchableOpacity>
-    ),
-  });
-}, []);
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerTitle: "",
+      headerLeft: () => (
+        <Image
+          style={{
+            width: 60,
+            height: 45,
+            resizeMode: "contain",
+            // marginLeft: 10,
+            marginTop: 19,
+            overflow: "hidden",
+          }}
+          source={logo}
+        />
+      ),
+      headerRight: () => (
+        <TouchableOpacity
+          style={{
+            marginRight: 10,
+          }}
+          onPress={() => navigation.navigate("All Friend list")}
+        >
+          <Ionicons name="chatbubble-outline" size={24} color="black" />
+        </TouchableOpacity>
+      ),
+    });
+  }, []);
 
   const renderPost = (post, index) => {
     return (
       <View key={post._id} style={styles.post}>
         <View style={styles.postHeader}>
           <View style={styles.postUserNameImg}>
-            {post.user && post.user.profilePicture ? (
+            {userProfile?.profilePic ? (
               <Image
-                source={{ uri: post.user.profilePicture }}
+                source={{ uri: userProfile?.profilePic }}
                 style={styles.profilePicture}
               />
             ) : (
@@ -308,7 +319,7 @@ const HomeScreen = ({ route }) => {
                 style={styles.profilePicture}
               />
             )}
-            <Text style={styles.username}>{post.username}</Text>
+            <Text style={styles.username}>{userProfile?.username}</Text>
           </View>
           <TouchableOpacity onPress={() => openOptionsModal(post)}>
             <Ionicons name="ellipsis-vertical" size={24} color="black" />
