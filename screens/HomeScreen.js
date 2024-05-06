@@ -52,36 +52,21 @@ const HomeScreen = ({ route }) => {
   const [showAnimatedMessage, setShowAnimatedMessage] = useState(false);
   const [animatedMessage, setAnimatedMessage] = useState("");
   const [userProfile, setUserProfile] = useState(null);
-  // State for tracking modal position
-  const [ThreeDotmodalHeight, setThreeDotModalHeight] = useState(0);
-  const [ThreeDotmodalPosition, setThreeDotModalPosition] = useState({
-    x: 0,
-    y: 0,
-  });
-  const { height: screenHeight } = Dimensions.get("window");
+  const [modalPosition, setModalPosition] = useState({ y: 0 });
 
   const panResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => true,
     onPanResponderMove: (evt, gestureState) => {
-      const newY = gestureState.dy + ThreeDotmodalPosition.y; // Calculate the new y position
-      const modalHeight = 600;
-      const constrainedY = Math.min(
-        Math.max(newY, 0),
-        screenHeight - modalHeight
-      );
-      setThreeDotModalPosition({
-        x: 0,
-        y: constrainedY,
-      });
-    },
-    onPanResponderRelease: (evt, gestureState) => {
-      const newY = gestureState.dy + ThreeDotmodalPosition.y; // Calculate the new y position
-      const modalHeight = 600;
-      const constrainedY = Math.min(
-        Math.max(newY, 0),
-        screenHeight - modalHeight
-      );
-      if (constrainedY >= screenHeight - 600) {
+      // Update modal position based on gesture movement
+      const newY = modalPosition.y + gestureState.dy;
+      setModalPosition({ x: modalPosition.x, y: newY });
+
+      // Check if modal reaches the bottom of the screen
+      const windowHeight = Dimensions.get("window").height;
+      const modalHeight = 600; // Assuming the modal height
+      const bottomThreshold = windowHeight - modalHeight;
+      if (newY >= bottomThreshold) {
+        // Close the modal
         closeOptionsModal();
       }
     },
@@ -226,10 +211,12 @@ const HomeScreen = ({ route }) => {
   const closeOptionsModal = () => {
     setModalVisible(false);
     setSelectedPost(null);
+    setModalPosition({ y: 0 });
   };
 
   const toggleCommentInput = () => {
     setShowCommentInput(!showCommentInput);
+    setModalPosition({ y: 0 });
   };
 
   const handleComment = () => {
@@ -433,20 +420,20 @@ const HomeScreen = ({ route }) => {
           transparent={true}
           visible={modalVisible}
           onRequestClose={closeOptionsModal}
-          onLayout={(event) => setModalHeight(event.nativeEvent.layout.height)}
         >
           <View
             style={[
               styles.modalContainer,
-              { top: ThreeDotmodalPosition.y, left: ThreeDotmodalPosition.x },
+              { top: modalPosition.y, left: modalPosition.x },
             ]}
+            {...panResponder.panHandlers}
           >
             <TouchableOpacity
               style={styles.ThreeDotModaloverlay}
               activeOpacity={1} // Ensure the touch doesn't pass through
               onPress={closeOptionsModal} // Close the modal when overlay is pressed
             />
-            <View style={styles.modalContent} {...panResponder.panHandlers}>
+            <View style={styles.modalContent}>
               <View style={styles.threeDotModalUpper}>
                 <TouchableOpacity style={styles.threeDotUpperIconContainer}>
                   <View style={styles.threeDotUpperIcon}>
@@ -503,15 +490,16 @@ const HomeScreen = ({ route }) => {
           <View
             style={[
               styles.modalContainer,
-              { top: ThreeDotmodalPosition.y, left: ThreeDotmodalPosition.x },
+              { top: modalPosition.y, left: modalPosition.x },
             ]}
+            {...panResponder.panHandlers}
           >
             <TouchableOpacity
               style={styles.ThreeDotModaloverlay}
               activeOpacity={1} // Ensure the touch doesn't pass through
               onPress={toggleCommentInput} // Close the modal when overlay is pressed
             />
-            <View style={styles.modalContent} {...panResponder.panHandlers}>
+            <View style={styles.modalContent}>
               <ScrollView>
                 {comments.map((comment, index) => (
                   <View key={index} style={styles.allCommentsContainer}>
@@ -653,7 +641,7 @@ const styles = StyleSheet.create({
   },
   postImage: {
     width: "100%",
-    height: 550,
+    height: 300,
   },
   actionButtons: {
     display: "flex",
@@ -666,7 +654,7 @@ const styles = StyleSheet.create({
   actionLeftButtons: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10, // Adjust the gap between icons
+    gap: 10,
   },
   socialInfo: {
     paddingHorizontal: 15,
@@ -711,7 +699,6 @@ const styles = StyleSheet.create({
   commentInputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 10,
     paddingHorizontal: 10,
     paddingVertical: 5,
     gap: 5,
