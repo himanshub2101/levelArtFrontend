@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, FlatList, StyleSheet, TouchableOpacity, Animated } from 'react-native';
-import { Feather } from '@expo/vector-icons'; // Import Feather icons from Expo
+import { View, Text, TextInput, FlatList, StyleSheet, TouchableOpacity, Animated, Image } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import axios from 'axios';
+import { useNavigation } from '@react-navigation/native'; // Import useNavigation hook
 
 const SearchScreen = () => {
+  const navigation = useNavigation(); // Use useNavigation hook to get access to navigation prop
+
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [fadeAnim] = useState(new Animated.Value(0)); // Initial value for opacity: 0
+  const [fadeAnim] = useState(new Animated.Value(0));
 
   useEffect(() => {
     Animated.timing(
@@ -23,9 +26,8 @@ const SearchScreen = () => {
   const handleSearch = async () => {
     try {
       setLoading(true);
-      // Make HTTP request to backend API using Axios
-      const response = await axios.get(`https://levelart.up.railway.app/search/users?username=${searchQuery}`);
-      setSearchResults(response.data.data); // Update this line
+      const response = await axios.get(`https://levelart.up.railway.app/search/user?username=${searchQuery}`);
+      setSearchResults(response.data.data);
     } catch (error) {
       console.error('Error searching:', error.message);
     } finally {
@@ -55,9 +57,18 @@ const SearchScreen = () => {
           renderItem={({ item }) => (
             <Animated.View style={{ ...styles.resultItem, opacity: fadeAnim }}>
               <TouchableOpacity
-                onPress={() => console.log('Pressed on', item.username)} // Replace with desired action
+                onPress={() => navigation.navigate('Profile', { user: item.username })} // Navigate to Profile screen with user data
+                style={styles.profileContainer}
               >
-                <Text style={styles.username}>{item.username}</Text>
+                <Image
+                  source={{ uri: item.profilePic }}
+                  style={styles.profilePic}
+                  onError={() => console.log('Error loading profile picture', item)}
+                />
+                <View style={styles.userInfo}>
+                  <Text style={styles.username}>{item.username}</Text>
+                  <Text style={styles.bio}>{item.bio}</Text>
+                </View>
               </TouchableOpacity>
             </Animated.View>
           )}
@@ -110,9 +121,26 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     elevation: 3,
   },
+  profileContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  profilePic: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 10,
+  },
+  userInfo: {
+    flex: 1,
+  },
   username: {
     fontWeight: 'bold',
-    fontSize: 20,
+    fontSize: 18,
+  },
+  bio: {
+    fontSize: 14,
+    color: 'gray',
   },
 });
 

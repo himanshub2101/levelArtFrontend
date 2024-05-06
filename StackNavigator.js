@@ -147,6 +147,11 @@ const StackNavigator = () => {
               component={BottomTabs}
               options={{ headerShown: false }}
             />
+             <Stack.Screen
+              name="Register"
+              component={RegisterScreen}
+              options={{ headerShown: false }}
+            />
             <Stack.Screen name="Settings" component={SettingsScreen} />
             <Stack.Screen
               name="AccountsCenter"
