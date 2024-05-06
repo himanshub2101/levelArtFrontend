@@ -2,13 +2,9 @@ import React, { useEffect, useState, useContext } from "react";
 import {
   StyleSheet,
   View,
-  ScrollView,
   Text,
-  TextInput,
-  Button,
   Image,
   TouchableOpacity,
-  Modal,
   SafeAreaView,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
@@ -17,26 +13,31 @@ import Icon from "react-native-vector-icons/Ionicons";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import ImagesScreen from "./ImagesScreen"; // Import the ImagesScreen component
-import TweetsScreen from "./TweetsScreen"; // Import the TweetsScreen component
+import ImagesScreen from "./ImagesScreen";
+import TweetsScreen from "./TweetsScreen";
 import {
   MaterialCommunityIcons,
   AntDesign,
   MaterialIcons,
 } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
+
 const Tab = createMaterialTopTabNavigator();
+
+const ImagesTabScreen = ({ posts }) => <ImagesScreen posts={posts} />;
+const TweetsTabScreen = ({ posts }) => <TweetsScreen posts={posts} />;
+const TagTabScreen = ({ posts }) => <TweetsScreen posts={posts} />;
 
 const ProfileScreen = () => {
   const navigation = useNavigation();
   const { userId, setUserId } = useContext(UserType);
-  const [user, setUser] = useState("");
+  const [userProfile, setUserProfile] = useState(null);
   const [followers, setFollowers] = useState(0);
   const [followings, setFollowings] = useState(0);
   const [posts, setPosts] = useState([]);
-  const [replies, setReplies] = useState([]);
   const [bio, setBio] = useState("");
-  const [userProfile, setUserProfile] = useState(null);
+  const [image, setImage] = useState("");
+  const [isImageSelected, setIsImageSelected] = useState(false);
 
   const handleImagePicker = async () => {
     const permissionResult =
@@ -48,8 +49,7 @@ const ProfileScreen = () => {
 
     const pickerResult = await ImagePicker.launchImageLibraryAsync();
     if (!pickerResult.canceled && pickerResult.assets.length > 0) {
-      console.log("Selected image URI:", pickerResult.assets[0].uri); // Log the URI of the selected image
-
+      console.log("Selected image URI:", pickerResult.assets[0].uri);
       setImage(pickerResult.assets[0].uri);
       setIsImageSelected(true);
     } else {
@@ -61,7 +61,6 @@ const ProfileScreen = () => {
     const fetchProfile = async (userId) => {
       try {
         const authToken = await AsyncStorage.getItem("authToken");
-
         const GetUser = await axios.get(
           `https://levelart.up.railway.app/users/${userId}`,
           {
@@ -71,58 +70,36 @@ const ProfileScreen = () => {
           }
         );
         setUserProfile(GetUser.data);
-        console.log("profile fetch", userProfile);
-        const profileResponse = await axios
-          .get(
-            `https://levelart.up.railway.app/followers/${userId}/followers`,
+
+        const profileResponse = await axios.get(
+          `https://levelart.up.railway.app/followers/${userId}/followers`,
+          {
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+            },
+          }
+        );
+
+        if (profileResponse) {
+          const { user, followers, followings, bio } = profileResponse.data;
+          // Corrected setUser function
+          setUserProfile(user);
+          setFollowers(followers?.length || 0);
+          setFollowings(followings?.length || 0);
+          setBio(bio || "");
+
+          const postsResponse = await axios.get(
+            `https://levelart.up.railway.app/posts/user/${userId}`,
             {
               headers: {
                 Authorization: `Bearer ${authToken}`,
               },
             }
-          )
-          .catch((error) => {
-            console.error("Error fetching profile:", error);
-          });
-
-        if (profileResponse) {
-          const { user, followers, followings, bio } = profileResponse.data;
-          setUser(user);
-          setFollowers(followers?.length || 0);
-          setFollowings(followings?.length || 0);
-          setBio(bio || "");
-
-          const postsResponse = await axios
-            .get(`https://levelart.up.railway.app/posts/user/${userId}`, {
-              headers: {
-                Authorization: `Bearer ${authToken}`,
-              },
-            })
-            .catch((error) => {
-              console.error("Error fetching posts:", error);
-            });
+          );
 
           if (postsResponse) {
             setPosts(postsResponse.data);
-            console.log("post user", postsResponse.data);
           }
-
-          // const repliesResponse = await axios
-          //   .get(
-          //     `https://levelart.up.railway.app/posts/user/${userId}/replies`,
-          //     {
-          //       headers: {
-          //         Authorization: `Bearer ${authToken}`,
-          //       },
-          //     }
-          //   )
-          //   .catch((error) => {
-          //     console.error("Error fetching replies:", error);
-          //   });
-
-          // if (repliesResponse) {
-          //   setReplies(repliesResponse.data);
-          // }
         }
       } catch (error) {
         console.error("Error fetching profile:", error);
@@ -136,51 +113,58 @@ const ProfileScreen = () => {
     }
   }, [userId]);
 
-  // const logout = async () => {
-  //   try {
-  //     await AsyncStorage.removeItem("authToken");
-  //     console.log("Cleared auth token");
-  //     navigation.replace("Login");
-  //   } catch (error) {
-  //     console.error("Error clearing auth token:", error);
-  //   }
-  // };
-
-  // const handleSettingsPress = () => {
-  //   navigation.navigate("Settings");
-  // };
-  // const handleEditProfile = () => {
-  //   navigation.navigate("EditProfile");
-  // };
-
-  // Filter posts based on whether they contain images
-  const imagePosts = posts.filter((post) => post.img); // Filter posts with images
-  const tweetPosts = posts.filter((post) => !post.img); // Filter posts without images
-
   useEffect(() => {
-    navigation.setOptions({
-      headerTitle: "",
-      headerLeft: () => (
-        <Text style={{ marginLeft: 10, fontWeight: 500, fontSize: 18 }}>
-          {userProfile?.username || "Loading..."}
-        </Text>
-      ),
-      headerRight: () => (
-        <TouchableOpacity
-          style={styles.settingsIcon}
-          onPress={() => navigation.navigate("Settings")}
-        >
-          <Icon name="settings-outline" size={30} color="#333" />
-        </TouchableOpacity>
-      ),
-    });
-  }, [userProfile]);
+    const loadUserProfile = async () => {
+      try {
+        const authToken = await AsyncStorage.getItem("authToken");
+        const GetUserResponse = await axios.get(
+          `https://levelart.up.railway.app/users/${userId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+            },
+          }
+        );
+        const userObject = GetUserResponse.data;
+        setUserProfile(userObject);
+  
+        // Extract username from the userObject
+        const usernameOfCurrentUser = userObject?.username;
+        console.log("Username of current user:", usernameOfCurrentUser);
+  
+        // Set header options
+        navigation.setOptions({
+          headerTitle: "",
+          headerLeft: () => (
+            <Text style={{ marginLeft: 10, fontWeight: "500", fontSize: 18 }}>
+              {usernameOfCurrentUser || "Loading..."}
+            </Text>
+          ),
+          headerRight: () => (
+            <TouchableOpacity
+              style={styles.settingsIcon}
+              onPress={() => navigation.navigate("Settings")}
+            >
+              <Icon name="settings-outline" size={30} color="#333" />
+            </TouchableOpacity>
+          ),
+        });
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      }
+    };
+  
+    if (userId) {
+      loadUserProfile();
+    } else {
+      console.log("userId is undefined");
+    }
+  }, [userProfile, navigation]);
   
 
   return (
     <>
       <SafeAreaView style={styles.container}>
-        {/* <ScrollView> */}
         <View style={styles.profileTop}>
           <View style={styles.userInfo}>
             <TouchableOpacity
@@ -209,8 +193,6 @@ const ProfileScreen = () => {
               </TouchableOpacity>
             </TouchableOpacity>
             <View style={styles.userStats}>
-              {/* <Text style={styles.username}>{user}</Text> */}
-
               <View style={styles.userStatsItem}>
                 <Text style={styles.statsCount}>{posts.length}</Text>
                 <Text style={styles.statsText}> posts</Text>
@@ -256,23 +238,20 @@ const ProfileScreen = () => {
           </View>
         </View>
 
-        {/* Render the Tab.Navigator outside the ScrollView */}
         <Tab.Navigator>
           <Tab.Screen
             name="Posts"
-            component={() => <ImagesScreen posts={imagePosts} />}
             options={{
-              // tabBarLabel:"",
               tabBarIcon: ({ color, size }) => (
                 <MaterialCommunityIcons name="grid" size={24} color="black" />
               ),
             }}
-          />
+          >
+            {() => <ImagesTabScreen posts={posts.filter((post) => post.img)} />}
+          </Tab.Screen>
           <Tab.Screen
             name="Tweets"
-            component={() => <TweetsScreen posts={tweetPosts} />}
             options={{
-              // tabBarLabel:"",
               tabBarIcon: ({ color, size }) => (
                 <MaterialCommunityIcons
                   name="message-text"
@@ -281,25 +260,20 @@ const ProfileScreen = () => {
                 />
               ),
             }}
-          />
+          >
+            {() => <TweetsTabScreen posts={posts.filter((post) => !post.img)} />}
+          </Tab.Screen>
           <Tab.Screen
             name="Tag"
-            component={() => <TweetsScreen posts={tweetPosts} />}
             options={{
-              // tabBarLabel:"",
               tabBarIcon: ({ color, size }) => (
                 <MaterialIcons name="tag" size={24} color="black" />
               ),
             }}
-          />
+          >
+            {() => <TagTabScreen posts={posts.filter((post) => !post.img)} />}
+          </Tab.Screen>
         </Tab.Navigator>
-
-        {/* <View style={styles.buttonsContainer}>
-          <TouchableOpacity style={styles.button} onPress={logout}>
-            <Text style={styles.buttonText}>Logout</Text>
-          </TouchableOpacity>
-        </View> */}
-        {/* </ScrollView> */}
       </SafeAreaView>
     </>
   );
@@ -310,28 +284,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "white",
   },
-  profileHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingTop: 35,
-    paddingBottom: 4,
-    // borderBottomWidth:1,
-    // borderBottomColor:"#e0e0e0",
-    zIndex: 10,
-    backgroundColor: "#fff",
-  },
   profileTop: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 10,
     paddingVertical: 10,
-  },
-  username: {
-    fontSize: 20,
-    fontWeight: "bold",
   },
   settingsIcon: {
     marginRight: 10,
@@ -368,22 +326,6 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   updateBioButtonText: {
-    color: "white",
-    fontWeight: "bold",
-  },
-  buttonsContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 20,
-  },
-  button: {
-    backgroundColor: "red",
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 5,
-  },
-  buttonText: {
     color: "white",
     fontWeight: "bold",
   },
