@@ -10,7 +10,6 @@ import {
   Image,
   Alert,
   ScrollView,
-  Platform,
   TouchableOpacity,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -140,11 +139,12 @@ const RegisterScreen = () => {
 
   const handleRegister = () => {
     let hasError = false;
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!username) {
       setNameError({ isError: true, message: "Please enter your name" });
       hasError = true;
     }
-    if (!email) {
+    if (!email || !emailPattern.test(email)) {
       setEmailError({ isError: true, message: "Please enter your email" });
       hasError = true;
     }
@@ -271,230 +271,237 @@ const RegisterScreen = () => {
     <SafeAreaView
       style={{ flex: 1, backgroundColor: "white", alignItems: "center" }}
     >
-      <View style={{ marginTop: 50 }}>
-        <Image
-          style={{ width: 150, height: 100, resizeMode: "contain" }}
-          source={logo}
-        />
-      </View>
-
-      <KeyboardAvoidingView>
-        <View style={{ alignItems: "center", justifyContent: "center" }}>
-          <Text style={{ fontSize: 17, fontWeight: "bold", marginTop: 25 }}>
-            Register to Your Account
-          </Text>
+      <ScrollView
+        contentContainerStyle={styles.scrollViewContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={{ marginTop: 50 }}>
+          <Image
+            style={{ width: 150, height: 100, resizeMode: "contain" }}
+            source={logo}
+          />
         </View>
 
-        <View style={{ marginTop: 40, gap: 10 }}>
-          <View>
-            <View style={styles.inputContainer}>
-              <Ionicons
-                style={{ marginLeft: 8 }}
+        <KeyboardAvoidingView>
+          <View style={{ alignItems: "center", justifyContent: "center" }}>
+            <Text style={{ fontSize: 17, fontWeight: "bold", marginTop: 25 }}>
+              Register to Your Account
+            </Text>
+          </View>
+
+          <View style={{ marginTop: 40, gap: 10 }}>
+            <View>
+              <View style={styles.inputContainer}>
+                <Ionicons
+                  style={{ marginLeft: 8 }}
+                  name="person"
+                  size={24}
+                  color="gray"
+                />
+                <TextInput
+                  value={username}
+                  onChangeText={handleNameChange}
+                  placeholderTextColor={"gray"}
+                  style={styles.input}
+                  placeholder="Enter your user name"
+                />
+              </View>
+              {nameError.isError && (
+                <Text style={styles.errorMessage}>{nameError.message}</Text>
+              )}
+            </View>
+            <View>
+              <View style={styles.inputContainer}>
+                <MaterialIcons
+                  style={{ marginLeft: 8 }}
+                  name="email"
+                  size={24}
+                  color="gray"
+                />
+                <TextInput
+                  value={email}
+                  onChangeText={handleEmailChange}
+                  placeholderTextColor={"gray"}
+                  style={styles.input}
+                  placeholder="enter your Email"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+              </View>
+              {emailError.isError && (
+                <Text style={styles.errorMessage}>{emailError.message}</Text>
+              )}
+            </View>
+            <View>
+              <View style={styles.inputContainer}>
+                <AntDesign
+                  style={{ marginLeft: 8 }}
+                  name="lock"
+                  size={24}
+                  color="gray"
+                />
+                <TextInput
+                  secureTextEntry={true}
+                  value={password}
+                  onChangeText={handlePasswordChange}
+                  placeholderTextColor={"gray"}
+                  style={styles.input}
+                  placeholder="enter your Password"
+                />
+              </View>
+              {passwordError.isError && (
+                <Text style={styles.errorMessage}>{passwordError.message}</Text>
+              )}
+            </View>
+            <View>
+              <View style={styles.inputContainer}>
+                <AntDesign
+                  style={{ marginLeft: 8 }}
+                  name="lock"
+                  size={24}
+                  color="gray"
+                />
+                <TextInput
+                  secureTextEntry={true}
+                  value={confirmpassword}
+                  onChangeText={handleConfirmPasswordChange}
+                  placeholderTextColor={"gray"}
+                  style={styles.input}
+                  placeholder="Confirm Password"
+                />
+              </View>
+              {confirmPasswordError.isError && (
+                <Text style={styles.errorMessage}>
+                  {confirmPasswordError.message}
+                </Text>
+              )}
+            </View>
+            <View>
+              <View style={styles.inputContainer}>
+                <MaterialIcons
+                  style={{ marginLeft: 8 }}
+                  name="phone"
+                  size={24}
+                  color="gray"
+                />
+                <TextInput
+                  value={phonenumber}
+                  onChangeText={handlePhoneNumberChange}
+                  placeholderTextColor="gray"
+                  keyboardType="numeric"
+                  style={styles.input}
+                  placeholder="Enter your Phone Number"
+                />
+              </View>
+              {phoneNumberError.isError && (
+                <Text style={styles.errorMessage}>
+                  {phoneNumberError.message}
+                </Text>
+              )}
+            </View>
+            {/* User Type Dropdown */}
+            <View style={styles.dropdownContainer}>
+              <MaterialIcons
+                style={styles.inputIcon}
                 name="person"
                 size={24}
                 color="gray"
               />
-              <TextInput
-                value={username}
-                onChangeText={handleNameChange}
-                placeholderTextColor={"gray"}
-                style={styles.input}
-                placeholder="Enter your user name"
-              />
+              <Picker
+                selectedValue={userType}
+                style={styles.dropdown}
+                onValueChange={(itemValue, itemIndex) => setUserType(itemValue)}
+              >
+                <Picker.Item label="Artist" value="artist" />
+                <Picker.Item label="Visitors" value="visitors" />
+                <Picker.Item label="Production" value="production" />
+              </Picker>
             </View>
-            {nameError.isError && (
-              <Text style={styles.errorMessage}>{nameError.message}</Text>
-            )}
           </View>
-          <View>
-            <View style={styles.inputContainer}>
-              <MaterialIcons
-                style={{ marginLeft: 8 }}
-                name="email"
-                size={24}
-                color="gray"
-              />
-              <TextInput
-                value={email}
-                onChangeText={handleEmailChange}
-                placeholderTextColor={"gray"}
-                style={styles.input}
-                placeholder="enter your Email"
-              />
-            </View>
-            {emailError.isError && (
-              <Text style={styles.errorMessage}>{emailError.message}</Text>
-            )}
-          </View>
-          <View>
-            <View style={styles.inputContainer}>
-              <AntDesign
-                style={{ marginLeft: 8 }}
-                name="lock"
-                size={24}
-                color="gray"
-              />
-              <TextInput
-                secureTextEntry={true}
-                value={password}
-                onChangeText={handlePasswordChange}
-                placeholderTextColor={"gray"}
-                style={styles.input}
-                placeholder="enter your Password"
-              />
-            </View>
-            {passwordError.isError && (
-              <Text style={styles.errorMessage}>{passwordError.message}</Text>
-            )}
-          </View>
-          <View>
-            <View style={styles.inputContainer}>
-              <AntDesign
-                style={{ marginLeft: 8 }}
-                name="lock"
-                size={24}
-                color="gray"
-              />
-              <TextInput
-                secureTextEntry={true}
-                value={confirmpassword}
-                onChangeText={handleConfirmPasswordChange}
-                placeholderTextColor={"gray"}
-                style={styles.input}
-                placeholder="Confirm Password"
-              />
-            </View>
-            {confirmPasswordError.isError && (
-              <Text style={styles.errorMessage}>
-                {confirmPasswordError.message}
-              </Text>
-            )}
-          </View>
-          <View>
-            <View style={styles.inputContainer}>
-              <MaterialIcons
-                style={{ marginLeft: 8 }}
-                name="phone"
-                size={24}
-                color="gray"
-              />
-              <TextInput
-                value={phonenumber}
-                onChangeText={handlePhoneNumberChange}
-                placeholderTextColor="gray"
-                keyboardType="numeric"
-                style={styles.input}
-                placeholder="Enter your Phone Number"
-              />
-            </View>
-            {phoneNumberError.isError && (
-              <Text style={styles.errorMessage}>
-                {phoneNumberError.message}
-              </Text>
-            )}
-          </View>
-          {/* User Type Dropdown */}
-          <View style={styles.dropdownContainer}>
-            <MaterialIcons
-              style={styles.inputIcon}
-              name="person"
-              size={24}
-              color="gray"
-            />
-            <Picker
-              selectedValue={userType}
-              style={styles.dropdown}
-              onValueChange={(itemValue, itemIndex) => setUserType(itemValue)}
+
+          <View style={{ marginTop: 10 }} />
+
+          {/* Use Pressable to handle login action */}
+          <Pressable
+            onPress={handleRegister}
+            style={({ pressed }) => [
+              {
+                width: 200,
+                backgroundColor: pressed ? "gray" : "black",
+                padding: 15,
+                marginTop: 5,
+                marginLeft: "auto",
+                marginRight: "auto",
+                borderRadius: 6,
+              },
+            ]}
+          >
+            <Text
+              style={{
+                textAlign: "center",
+                fontWeight: "bold",
+                fontSize: 16,
+                color: "white",
+              }}
             >
-              <Picker.Item label="Artist" value="artist" />
-              <Picker.Item label="Visitors" value="visitors" />
-              <Picker.Item label="Production" value="production" />
-            </Picker>
-          </View>
-        </View>
+              Register
+            </Text>
+          </Pressable>
 
-        <View style={{ marginTop: 10 }} />
-
-        {/* Use Pressable to handle login action */}
-        <Pressable
-          onPress={handleRegister}
-          style={({ pressed }) => [
-            {
-              width: 200,
-              backgroundColor: pressed ? "gray" : "black",
-              padding: 15,
-              marginTop: 5,
-              marginLeft: "auto",
-              marginRight: "auto",
-              borderRadius: 6,
-            },
-          ]}
-        >
-          <Text
-            style={{
-              textAlign: "center",
-              fontWeight: "bold",
-              fontSize: 16,
-              color: "white",
-            }}
+          <Pressable
+            onPress={() => navigation.navigate("Login")}
+            style={{ marginTop: 10 }}
           >
-            Register
-          </Text>
-        </Pressable>
-
-        <Pressable
-          onPress={() => navigation.navigate("Login")}
-          style={{ marginTop: 10 }}
-        >
-          <Text style={{ textAlign: "center", fontSize: 16 }}>
-            Already have an account? Sign In
-          </Text>
-        </Pressable>
-        <View
-          style={{
-            flexDirection: "row",
-            flex: 1,
-            gap: 40,
-            justifyContent: "center",
-            marginTop: 20,
-          }}
-        >
-          <TouchableOpacity
-            onPress={handleGoogleLogin}
+            <Text style={{ textAlign: "center", fontSize: 16 }}>
+              Already have an account? Sign In
+            </Text>
+          </Pressable>
+          <View
             style={{
-              backgroundColor: "#fff",
-              borderColor: "#e0e0e0",
-              borderRadius: 50,
-              borderWidth: 1,
-              width: 43,
-              height: 43,
+              flexDirection: "row",
+              flex: 1,
+              gap: 40,
               justifyContent: "center",
-              alignItems: "center",
+              marginTop: 20,
             }}
           >
-            <Image
-              source={GoogleLogo}
+            <TouchableOpacity
+              onPress={handleGoogleLogin}
               style={{
-                width: 40,
-                height: 40,
-                overflow: "hidden",
+                backgroundColor: "#fff",
+                borderColor: "#e0e0e0",
                 borderRadius: 50,
+                borderWidth: 1,
+                width: 43,
+                height: 43,
+                justifyContent: "center",
+                alignItems: "center",
               }}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={handleFacebookLogin}>
-            <Image
-              source={facebooklogo}
-              style={{
-                width: 40,
-                height: 40,
-                overflow: "hidden",
-                borderRadius: 50,
-              }}
-            />
-          </TouchableOpacity>
-        </View>
-      </KeyboardAvoidingView>
+            >
+              <Image
+                source={GoogleLogo}
+                style={{
+                  width: 40,
+                  height: 40,
+                  overflow: "hidden",
+                  borderRadius: 50,
+                }}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleFacebookLogin}>
+              <Image
+                source={facebooklogo}
+                style={{
+                  width: 40,
+                  height: 40,
+                  overflow: "hidden",
+                  borderRadius: 50,
+                }}
+              />
+            </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -502,9 +509,14 @@ const RegisterScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    // alignItems: "center",
+    // justifyContent: "center",
+    // paddingHorizontal: 20,
+  },
+  scrollViewContent: {
+    flexGrow: 1,
     alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 20,
+    paddingVertical: 20,
   },
   logoContainer: {
     marginTop: 50,

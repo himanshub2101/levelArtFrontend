@@ -53,6 +53,7 @@ const ThreadsScreen = () => {
     }
   }, [userId]);
 
+
   const handleImagePicker = async () => {
     const permissionResult =
       await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -74,6 +75,7 @@ const ThreadsScreen = () => {
   const handleImageCancel = () => {
     setImage(null);
     setIsImageSelected(false);
+
   };
 
   const handlePostSubmit = async () => {
@@ -119,6 +121,7 @@ const ThreadsScreen = () => {
       setIsLoading(false);
     }
     navigation.navigate("Home");
+  
   };
 
   return (
@@ -147,7 +150,7 @@ const ThreadsScreen = () => {
           />
         </View>
 
-        {isImageSelected && (
+        {isImageSelected && !isLoading &&(
           <View
             style={{
               paddingHorizontal: 10,

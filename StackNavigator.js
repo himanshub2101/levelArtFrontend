@@ -19,7 +19,7 @@ import ThreadsScreen from "./screens/ThreadsScreen";
 import { Ionicons } from "@expo/vector-icons";
 import ActivityScreen from "./screens/ActivityScreen";
 import ProfileScreen from "./screens/ProfileScreen";
-import AsyncStorage from "@react-native-async-storage/async-storage"; // Import AsyncStorage
+// import AsyncStorage from "@react-native-async-storage/async-storage"; // Import AsyncStorage
 import SettingsScreen from "./screens/SettingsScreen";
 import AccountsCenterScreen from "./screens/AccountCenter";
 import SearchScreen from "./screens/SearchScreen";
@@ -33,28 +33,28 @@ import EditProfileScreen from "./screens/EditProfileScreen";
 const StackNavigator = () => {
   const Stack = createNativeStackNavigator();
   const Tab = createBottomTabNavigator(); // Add Tab import
-  const [authToken, setAuthToken] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // const [authToken, setAuthToken] = useState(null);
+  // const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const getAuthToken = async () => {
-      try {
-        const token = await AsyncStorage.getItem("authToken");
-        console.log("token:", token);
-        setAuthToken(token);
-        setIsLoading(false);
-      } catch (error) {
-        console.log("Error retrieving authToken from AsyncStorage:", error);
-        setIsLoading(false);
-      }
-    };
+  // useEffect(() => {
+  //   const getAuthToken = async () => {
+  //     try {
+  //       const token = await AsyncStorage.getItem("authToken");
+  //       console.log("token:", token);
+  //       setAuthToken(token);
+  //       setIsLoading(false);
+  //     } catch (error) {
+  //       console.log("Error retrieving authToken from AsyncStorage:", error);
+  //       setIsLoading(false);
+  //     }
+  //   };
 
-    getAuthToken();
-  }, []);
+  //   getAuthToken();
+  // }, []);
 
-  if (isLoading) {
-    return <LoadingIndicator />; // Display loading indicator if isLoading is true
-  }
+  // if (isLoading) {
+  //   return <LoadingIndicator />; // Display loading indicator if isLoading is true
+  // }
 
   // Define BottomTabs component here
   const BottomTabs = () => (
@@ -140,7 +140,7 @@ const StackNavigator = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator>
-        {authToken ? (
+        {/* {authToken &&  */}
           <>
             <Stack.Screen
               name="Main"
@@ -168,14 +168,14 @@ const StackNavigator = () => {
               component={EditProfileScreen}
               // options={{ headerShown: false }}
             />
-            <Stack.Screen
+            {/* <Stack.Screen
               name="Login"
               component={LoginScreen}
               options={{ headerShown: false }}
-            />
-          </>
-        ) : (
-          <>
+            /> */}
+          {/* </> */}
+
+          {/* <> */}
             <Stack.Screen
               name="Login"
               component={LoginScreen}
@@ -201,13 +201,13 @@ const StackNavigator = () => {
               component={ProductionForm}
               options={{ headerShown: false }}
             />
-            <Stack.Screen
+            {/* <Stack.Screen
               name="Main"
               component={BottomTabs}
               options={{ headerShown: false }}
-            />
+            /> */}
           </>
-        )}
+        {/* } */}
       </Stack.Navigator>
     </NavigationContainer>
   );

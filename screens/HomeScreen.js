@@ -59,15 +59,18 @@ const HomeScreen = ({ route }) => {
     onPanResponderMove: (evt, gestureState) => {
       // Update modal position based on gesture movement
       const newY = modalPosition.y + gestureState.dy;
-      setModalPosition({ x: modalPosition.x, y: newY });
+      if (newY > modalPosition.y) {
+        setModalPosition({ x: modalPosition.x, y: newY });
 
-      // Check if modal reaches the bottom of the screen
-      const windowHeight = Dimensions.get("window").height;
-      const modalHeight = 600; // Assuming the modal height
-      const bottomThreshold = windowHeight - modalHeight;
-      if (newY >= bottomThreshold) {
-        // Close the modal
-        closeOptionsModal();
+        // Check if modal reaches the bottom of the screen
+        const windowHeight = Dimensions.get("window").height;
+        const modalHeight = 600; // Assuming the modal height
+        const bottomThreshold = windowHeight - modalHeight;
+        if (newY >= bottomThreshold) {
+          // Close the modal
+          closeOptionsModal();
+          setShowCommentInput(false);
+        }
       }
     },
   });
@@ -92,7 +95,10 @@ const HomeScreen = ({ route }) => {
         console.error("Error fetching user data:", error);
       }
     };
-    fetchUserData();
+    // fetchUserData();
+    //refresh after every 3 second
+    const intervalId = setInterval(fetchUserData,3000);
+    return () => clearInterval(intervalId);
   }, [route]);
 
   useEffect(() => {
@@ -282,7 +288,7 @@ const HomeScreen = ({ route }) => {
           style={{
             marginRight: 10,
           }}
-          onPress={() => navigation.navigate("All Friend list")}
+          // onPress={() => navigation.navigate("All Friend list")}
         >
           <Ionicons name="chatbubble-outline" size={24} color="black" />
         </TouchableOpacity>

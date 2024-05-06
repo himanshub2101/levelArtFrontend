@@ -37,6 +37,10 @@ const ProfileScreen = () => {
   const [replies, setReplies] = useState([]);
   const [bio, setBio] = useState("");
   const [userProfile, setUserProfile] = useState(null);
+  const PostsComponent = () => <ImagesScreen posts={imagePosts} />;
+  const TweetsComponent = () => <TweetsScreen posts={tweetPosts} />;
+  const TagComponent = () => <TweetsScreen posts={tweetPosts} />;
+
 
   const handleImagePicker = async () => {
     const permissionResult =
@@ -50,7 +54,33 @@ const ProfileScreen = () => {
     if (!pickerResult.canceled && pickerResult.assets.length > 0) {
       console.log("Selected image URI:", pickerResult.assets[0].uri); // Log the URI of the selected image
 
-      setImage(pickerResult.assets[0].uri);
+      setUserProfile(prevProfile => ({
+        ...prevProfile,
+        profilePic: pickerResult.assets[0].uri
+      }));
+      try {
+        const authToken = await AsyncStorage.getItem("authToken");
+        
+        // Define the request body with the updated profilePic
+        const requestBody = {
+          profilePic: pickerResult.assets[0].uri
+        };
+  
+        // Make a PUT request to update the profilePic
+        const updateUserProfileResponse = await axios.put(
+          `https://levelart.up.railway.app/users/${userId}`,
+          requestBody,
+          {
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+            },
+          }
+        );
+  
+        console.log("Update profile response:", updateUserProfileResponse.data);
+      } catch (error) {
+        console.error("Error updating profile:", error);
+      }
       setIsImageSelected(true);
     } else {
       console.log("Image picking cancelled or no image selected");
@@ -72,7 +102,8 @@ const ProfileScreen = () => {
         );
         setUserProfile(GetUser.data);
         console.log("profile fetch", userProfile);
-        const profileResponse = await axios
+        //Fetch followers
+        const followerResponse = await axios
           .get(
             `https://levelart.up.railway.app/followers/${userId}/followers`,
             {
@@ -80,17 +111,19 @@ const ProfileScreen = () => {
                 Authorization: `Bearer ${authToken}`,
               },
             }
+
           )
           .catch((error) => {
             console.error("Error fetching profile:", error);
           });
 
-        if (profileResponse) {
-          const { user, followers, followings, bio } = profileResponse.data;
-          setUser(user);
-          setFollowers(followers?.length || 0);
-          setFollowings(followings?.length || 0);
-          setBio(bio || "");
+          console.log("followers",followerResponse.data)
+          if (followerResponse) {
+            // const { user, followers, followings, bio } = followerResponse.data;
+            // setUser(user);
+            // setFollowers(followers?.length || 0);
+            // setFollowings(followings?.length || 0);
+            // setBio(bio || "");
 
           const postsResponse = await axios
             .get(`https://levelart.up.railway.app/posts/user/${userId}`, {
@@ -135,23 +168,6 @@ const ProfileScreen = () => {
       console.log("userId is undefined");
     }
   }, [userId]);
-
-  // const logout = async () => {
-  //   try {
-  //     await AsyncStorage.removeItem("authToken");
-  //     console.log("Cleared auth token");
-  //     navigation.replace("Login");
-  //   } catch (error) {
-  //     console.error("Error clearing auth token:", error);
-  //   }
-  // };
-
-  // const handleSettingsPress = () => {
-  //   navigation.navigate("Settings");
-  // };
-  // const handleEditProfile = () => {
-  //   navigation.navigate("EditProfile");
-  // };
 
   // Filter posts based on whether they contain images
   const imagePosts = posts.filter((post) => post.img); // Filter posts with images
@@ -257,49 +273,41 @@ const ProfileScreen = () => {
         </View>
 
         {/* Render the Tab.Navigator outside the ScrollView */}
-        <Tab.Navigator>
-          <Tab.Screen
-            name="Posts"
-            component={() => <ImagesScreen posts={imagePosts} />}
-            options={{
-              // tabBarLabel:"",
-              tabBarIcon: ({ color, size }) => (
-                <MaterialCommunityIcons name="grid" size={24} color="black" />
-              ),
-            }}
-          />
-          <Tab.Screen
-            name="Tweets"
-            component={() => <TweetsScreen posts={tweetPosts} />}
-            options={{
-              // tabBarLabel:"",
-              tabBarIcon: ({ color, size }) => (
-                <MaterialCommunityIcons
-                  name="message-text"
-                  size={24}
-                  color="black"
-                />
-              ),
-            }}
-          />
-          <Tab.Screen
-            name="Tag"
-            component={() => <TweetsScreen posts={tweetPosts} />}
-            options={{
-              // tabBarLabel:"",
-              tabBarIcon: ({ color, size }) => (
-                <MaterialIcons name="tag" size={24} color="black" />
-              ),
-            }}
-          />
-        </Tab.Navigator>
 
-        {/* <View style={styles.buttonsContainer}>
-          <TouchableOpacity style={styles.button} onPress={logout}>
-            <Text style={styles.buttonText}>Logout</Text>
-          </TouchableOpacity>
-        </View> */}
-        {/* </ScrollView> */}
+<Tab.Navigator>
+<Tab.Screen
+  name="Posts"
+  component={PostsComponent}
+  options={{
+    tabBarIcon: ({ color, size }) => (
+      <MaterialCommunityIcons name="grid" size={24} color="black" />
+    ),
+  }}
+/>
+<Tab.Screen
+  name="Tweets"
+  component={TweetsComponent}
+  options={{
+    tabBarIcon: ({ color, size }) => (
+      <MaterialCommunityIcons
+        name="message-text"
+        size={24}
+        color="black"
+      />
+    ),
+  }}
+/>
+<Tab.Screen
+  name="Tag"
+  component={TagComponent}
+  options={{
+    tabBarIcon: ({ color, size }) => (
+      <MaterialIcons name="tag" size={24} color="black" />
+    ),
+  }}
+/>
+</Tab.Navigator>
+
       </SafeAreaView>
     </>
   );
