@@ -10,7 +10,7 @@ import {
 } from "react-native";
 
 const ImagesScreen = ({ posts }) => {
-  const renderPostItem = ({ item }) => (
+  const renderPostItem = ( {item} ) => (
     <View style={styles.postWrapper}>
       <Image
         style={styles.postImage}
