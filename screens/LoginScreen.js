@@ -20,6 +20,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import logo from '../assets/logo.png';
 import facebooklogo from '../assets/facebookLogo.png';
 import GoogleLogo from '../assets/googleLogo.png';
+
 // Define the LoginScreen component
 const LoginScreen = () => {
   // Define state variables
@@ -46,7 +47,33 @@ const LoginScreen = () => {
     };
 
     checkLoginStatus();
+
+    GoogleSignin.configure({
+      webClientId: 'YOUR_WEB_CLIENT_ID_HERE',
+      offlineAccess: true,
+    });
+
   }, []);
+
+
+  const handleGoogleSignIn = async () => {
+    try {
+      await GoogleSignin.hasPlayServices();
+      const userInfo = await GoogleSignin.signIn();
+      console.log(userInfo);
+      // Now you can use userInfo.user to get user details
+    } catch (error) {
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+        // user cancelled the login flow
+      } else if (error.code === statusCodes.IN_PROGRESS) {
+        // operation (e.g. sign in) is in progress already
+      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        // play services not available or outdated
+      } else {
+        // some other error happened
+      }
+    }
+  }
 
   const handleEmailChange = (text) => {
     const normalizedEmail = text.trim().toLowerCase();
@@ -297,13 +324,17 @@ const LoginScreen = () => {
           </Text>
         </Pressable>
         <View style={{flexDirection:"row",flex:1,gap:40,justifyContent:"center",marginTop:20}}>
-          <TouchableOpacity style={{backgroundColor:"#fff",borderColor:'#e0e0e0', borderRadius:50,borderWidth:1,width:43,height:43,justifyContent:"center",alignItems:"center"}}>
-            <Image source={GoogleLogo} style={{width:40, height:40 ,overflow:'hidden',borderRadius:50}}/>
-          </TouchableOpacity>
-          <TouchableOpacity >
-            <Image source={facebooklogo} style={{width:40, height:40,overflow:'hidden',borderRadius:50}}/>
-          </TouchableOpacity>
-        </View>
+  <GoogleSigninButton
+    style={{ width: 43, height: 43 }}
+    size={GoogleSigninButton.Size.Icon}
+    color={GoogleSigninButton.Color.Dark}
+    onPress={handleGoogleSignIn}
+  />
+  <TouchableOpacity >
+    <Image source={facebooklogo} style={{width:40, height:40,overflow:'hidden',borderRadius:50}}/>
+  </TouchableOpacity>
+</View>
+
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

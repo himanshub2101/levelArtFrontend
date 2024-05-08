@@ -1,3 +1,4 @@
+// Import useState and useEffect
 import React, { useEffect, useState, useContext } from "react";
 import {
   StyleSheet,
@@ -30,7 +31,7 @@ const TagTabScreen = ({ posts }) => <TweetsScreen posts={posts} />;
 
 const ProfileScreen = () => {
   const navigation = useNavigation();
-  const { userId, setUserId } = useContext(UserType);
+  const { userId } = useContext(UserType); // Access userId from context
   const [userProfile, setUserProfile] = useState(null);
   const [followers, setFollowers] = useState(0);
   const [followings, setFollowings] = useState(0);
@@ -38,6 +39,7 @@ const ProfileScreen = () => {
   const [bio, setBio] = useState("");
   const [image, setImage] = useState("");
   const [isImageSelected, setIsImageSelected] = useState(false);
+  const [loggedInUserId, setLoggedInUserId] = useState(null); // New state to hold the logged-in user's ID
 
   const handleImagePicker = async () => {
     const permissionResult =
@@ -56,6 +58,19 @@ const ProfileScreen = () => {
       console.log("Image picking cancelled or no image selected");
     }
   };
+
+  useEffect(() => {
+    const fetchLoggedInUserId = async () => {
+      try {
+        const loggedInUserId = await AsyncStorage.getItem("userId");
+        setLoggedInUserId(loggedInUserId);
+      } catch (error) {
+        console.error("Error fetching logged-in user's ID:", error);
+      }
+    };
+
+    fetchLoggedInUserId();
+  }, []);
 
   useEffect(() => {
     const fetchProfile = async (userId) => {
@@ -207,6 +222,12 @@ const ProfileScreen = () => {
               </View>
             </View>
           </View>
+          {/* Render the follow button only if the profile does not belong to the logged-in user */}
+          {userId !== loggedInUserId && (
+            <TouchableOpacity style={styles.followButton}>
+              <Text style={styles.followButtonText}>Follow</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         <View style={styles.profileInfo}>
@@ -293,6 +314,16 @@ const styles = StyleSheet.create({
   },
   settingsIcon: {
     marginRight: 10,
+  },
+  followButton: {
+    backgroundColor: "blue",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 5,
+  },
+  followButtonText: {
+    color: "white",
+    fontWeight: "bold",
   },
   profileInfo: {
     flexDirection: "column",
