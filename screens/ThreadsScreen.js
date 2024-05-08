@@ -53,7 +53,6 @@ const ThreadsScreen = () => {
     }
   }, [userId]);
 
-
   const handleImagePicker = async () => {
     const permissionResult =
       await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -75,55 +74,62 @@ const ThreadsScreen = () => {
   const handleImageCancel = () => {
     setImage(null);
     setIsImageSelected(false);
-
   };
 
   const handlePostSubmit = async () => {
     setIsLoading(true);
-
+  
     try {
       const authToken = await AsyncStorage.getItem("authToken");
       const decodedToken = jwt_decode(authToken);
       const userId = decodedToken.sub; // Extract user ID from the token
-
+  
       const formData = new FormData();
       formData.append("text", content);
       formData.append("postedBy", userId); // Include the user ID as the "postedBy" field
-
+  
       if (image) {
         const localUri = image;
         const filename = localUri.split("/").pop();
         const match = /\.(\w+)$/.exec(filename);
-        const type = match ? `image/${match[1]}` : "image";
+        const type = match ? 'image/${match[1]}' : "image";
         formData.append("img", { uri: localUri, name: filename, type }); // Change 'image' to 'img'
       }
-
+  
       const response = await axios.post(
-        "https://levelart.up.railway.app/posts/create-post",
+        `https://levelart.up.railway.app/posts/create-post`,
         formData,
         {
           headers: {
             "Content-Type": "multipart/form-data",
             Authorization: `Bearer ${authToken}`,
           },
+          onUploadProgress: (progressEvent) => {
+            // Calculate progress percentage
+            const progress = Math.round((progressEvent.loaded / progressEvent.total) * 100);
+            console.log('Upload Progress:' `${progress}%`);
+            // You can update the UI with the progress if needed
+          },
         }
       );
-
+  
       AsyncStorage.setItem("postId", response.data._id);
-
+  
       console.log("Post created successfully:", response.data._id);
       // Reset form fields
       setContent("");
       setImage(null);
+      setIsImageSelected(false); // Set isImageSelected to false
+      // Show a success message or any UI indication that the post has been uploaded successfully
     } catch (error) {
       console.error("Error creating post:", error);
+      // Show an error message or handle the error appropriately
     } finally {
       setIsLoading(false);
     }
     navigation.navigate("Home");
-  
   };
-
+  
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.navBar}>
@@ -150,7 +156,7 @@ const ThreadsScreen = () => {
           />
         </View>
 
-        {isImageSelected && !isLoading &&(
+        {isImageSelected && (
           <View
             style={{
               paddingHorizontal: 10,
@@ -168,6 +174,13 @@ const ThreadsScreen = () => {
             </TouchableOpacity>
           </View>
         )}
+          {isLoading && (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#0000ff" />
+          <Text style={styles.loadingText}>Uploading...</Text>
+        </View>
+      )}
+
       </View>
       {/* <View style={{ flex: 1}}>
  
@@ -261,6 +274,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     position: "absolute",
     bottom: 10,
+  },
+  loadingContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)', // Semi-transparent white background
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
   },
   // inputContainer: {
   //   //flexDirection: 'row',

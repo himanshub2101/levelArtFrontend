@@ -2,13 +2,9 @@ import React, { useEffect, useState, useContext } from "react";
 import {
   StyleSheet,
   View,
-  ScrollView,
   Text,
-  TextInput,
-  Button,
   Image,
   TouchableOpacity,
-  Modal,
   SafeAreaView,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
@@ -19,11 +15,7 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import ImagesScreen from "./ImagesScreen"; // Import the ImagesScreen component
 import TweetsScreen from "./TweetsScreen"; // Import the TweetsScreen component
-import {
-  MaterialCommunityIcons,
-  AntDesign,
-  MaterialIcons,
-} from "@expo/vector-icons";
+import { AntDesign } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 const Tab = createMaterialTopTabNavigator();
 
@@ -37,10 +29,6 @@ const ProfileScreen = () => {
   const [replies, setReplies] = useState([]);
   const [bio, setBio] = useState("");
   const [userProfile, setUserProfile] = useState(null);
-  const PostsComponent = () => <ImagesScreen posts={imagePosts} />;
-  const TweetsComponent = () => <TweetsScreen posts={tweetPosts} />;
-  const TagComponent = () => <TweetsScreen posts={tweetPosts} />;
-
 
   const handleImagePicker = async () => {
     const permissionResult =
@@ -54,18 +42,18 @@ const ProfileScreen = () => {
     if (!pickerResult.canceled && pickerResult.assets.length > 0) {
       console.log("Selected image URI:", pickerResult.assets[0].uri); // Log the URI of the selected image
 
-      setUserProfile(prevProfile => ({
+      setUserProfile((prevProfile) => ({
         ...prevProfile,
-        profilePic: pickerResult.assets[0].uri
+        profilePic: pickerResult.assets[0].uri,
       }));
       try {
         const authToken = await AsyncStorage.getItem("authToken");
-        
+
         // Define the request body with the updated profilePic
         const requestBody = {
-          profilePic: pickerResult.assets[0].uri
+          profilePic: pickerResult.assets[0].uri,
         };
-  
+
         // Make a PUT request to update the profilePic
         const updateUserProfileResponse = await axios.put(
           `https://levelart.up.railway.app/users/${userId}`,
@@ -76,7 +64,7 @@ const ProfileScreen = () => {
             },
           }
         );
-  
+
         console.log("Update profile response:", updateUserProfileResponse.data);
       } catch (error) {
         console.error("Error updating profile:", error);
@@ -111,19 +99,18 @@ const ProfileScreen = () => {
                 Authorization: `Bearer ${authToken}`,
               },
             }
-
           )
           .catch((error) => {
             console.error("Error fetching profile:", error);
           });
 
-          console.log("followers",followerResponse.data)
-          if (followerResponse) {
-            // const { user, followers, followings, bio } = followerResponse.data;
-            // setUser(user);
-            // setFollowers(followers?.length || 0);
-            // setFollowings(followings?.length || 0);
-            // setBio(bio || "");
+        console.log("followers", followerResponse.data);
+        if (followerResponse) {
+          // const { user, followers, followings, bio } = followerResponse.data;
+          // setUser(user);
+          // setFollowers(followers?.length || 0);
+          // setFollowings(followings?.length || 0);
+          // setBio(bio || "");
 
           const postsResponse = await axios
             .get(`https://levelart.up.railway.app/posts/user/${userId}`, {
@@ -177,8 +164,12 @@ const ProfileScreen = () => {
     navigation.setOptions({
       headerTitle: "",
       headerLeft: () => (
-        <Text style={{ marginLeft: 10, fontWeight: 500, fontSize: 18 }}>
-          {userProfile?.username || "Loading..."}
+        <Text style={styles.headerLeftText}>
+          {userProfile?.username
+            ? userProfile.username.length > 10
+              ? `${userProfile.username.slice(0, 10)}...`
+              : userProfile.username
+            : "Loading..."}
         </Text>
       ),
       headerRight: () => (
@@ -191,7 +182,6 @@ const ProfileScreen = () => {
       ),
     });
   }, [userProfile]);
-  
 
   return (
     <>
@@ -274,40 +264,20 @@ const ProfileScreen = () => {
 
         {/* Render the Tab.Navigator outside the ScrollView */}
 
-<Tab.Navigator>
-<Tab.Screen
-  name="Posts"
-  component={PostsComponent}
-  options={{
-    tabBarIcon: ({ color, size }) => (
-      <MaterialCommunityIcons name="grid" size={24} color="black" />
-    ),
-  }}
-/>
-<Tab.Screen
-  name="Tweets"
-  component={TweetsComponent}
-  options={{
-    tabBarIcon: ({ color, size }) => (
-      <MaterialCommunityIcons
-        name="message-text"
-        size={24}
-        color="black"
-      />
-    ),
-  }}
-/>
-<Tab.Screen
-  name="Tag"
-  component={TagComponent}
-  options={{
-    tabBarIcon: ({ color, size }) => (
-      <MaterialIcons name="tag" size={24} color="black" />
-    ),
-  }}
-/>
-</Tab.Navigator>
-
+        <Tab.Navigator>
+          <Tab.Screen
+            name="Posts"
+            component={() => <ImagesScreen posts={imagePosts} />}
+          />
+          <Tab.Screen
+            name="Tweets"
+            component={() => <TweetsScreen posts={tweetPosts} />}
+          />
+          <Tab.Screen
+            name="Tag"
+            component={() => <TweetsScreen posts={tweetPosts} />}
+          />
+        </Tab.Navigator>
       </SafeAreaView>
     </>
   );
@@ -329,6 +299,13 @@ const styles = StyleSheet.create({
     // borderBottomColor:"#e0e0e0",
     zIndex: 10,
     backgroundColor: "#fff",
+  },
+  headerLeftContainer: {
+    marginLeft: 10,
+  },
+  headerLeftText: {
+    fontWeight: "500",
+    fontSize: 18,
   },
   profileTop: {
     flexDirection: "row",

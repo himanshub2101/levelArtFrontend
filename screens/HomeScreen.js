@@ -149,7 +149,7 @@ const HomeScreen = ({ route }) => {
 
       const postsPromises = followings.map(async (followingId) => {
         const response = await axios.get(
-          `https://levelart.up.railway.app/user/${followingId}`,
+          `https://levelart.up.railway.app/users/${followingId}`,
           { headers }
         );
         return response.data;
@@ -321,7 +321,7 @@ const HomeScreen = ({ route }) => {
         <View style={styles.postContent}>
           {post.text && <Text style={styles.captions}>{post.text}</Text>}
           {post.img && (
-            <Image source={{ uri: post.img }} style={styles.postImage} />
+            <Image source={{ uri: post.img }} style={styles.postImage} resizeMode='cover' />
           )}
           <View style={styles.actionButtons}>
             <View style={styles.actionLeftButtons}>
@@ -646,8 +646,8 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   postImage: {
-    width: "100%",
-    height: 300,
+    flex:1,
+    aspectRatio:1
   },
   actionButtons: {
     display: "flex",

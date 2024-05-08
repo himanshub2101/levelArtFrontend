@@ -1,125 +1,223 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, FlatList, StyleSheet, TouchableOpacity, Animated, KeyboardAvoidingView, Platform, SafeAreaView } from 'react-native';
-import { Feather } from '@expo/vector-icons'; // Import Feather icons from Expo
-import axios from 'axios';
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  FlatList,
+  StyleSheet,
+  TouchableOpacity,
+  Animated,
+  KeyboardAvoidingView,
+  Platform,
+  Image,
+  SafeAreaView,
+} from "react-native";
+import { Feather } from "@expo/vector-icons"; // Import Feather icons from Expo
+import axios from "axios";
+import { useNavigation } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const SearchScreen = () => {
-  const [searchQuery, setSearchQuery] = useState('');
+  const navigation = useNavigation();
+  const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [fadeAnim] = useState(new Animated.Value(0)); // Initial value for opacity: 0
 
   useEffect(() => {
-    Animated.timing(
-      fadeAnim,
-      {
-        toValue: 1,
-        duration: 1000,
-        useNativeDriver: true,
-      }
-    ).start();
-  }, [searchResults]);
+    if (searchQuery.trim() !== "") {
+      handleSearch();
+    } else {
+      setSearchResults([]);
+    }
+  }, [searchQuery]);
 
   const handleSearch = async () => {
     try {
       setLoading(true);
       // Make HTTP request to backend API using Axios
-      const response = await axios.get(`https://levelart.up.railway.app/search/user?username=${searchQuery}`);
-      setSearchResults(response.data.data); // Update this line
+      const response = await axios.get(
+        `https://levelart.up.railway.app/search/user?username=${searchQuery}`
+      );
+      setSearchResults(response.data.data); // Update search results
     } catch (error) {
-      console.error('Error searching:', error.message);
+      console.error("Error searching:", error.message);
     } finally {
       setLoading(false);
     }
   };
 
+  const handleFollowUnfollow = async (user) => {
+    try {
+      const authToken = await AsyncStorage.getItem("authToken");
+    
+      const headers = {
+        Authorization: `Bearer ${authToken}`,
+      };
+    
+      // Check if the user is already followed
+      const isFollowing = user.followers.some(
+        (follower) => follower.userId === user._id
+      );
+    
+      // Make HTTP request based on whether the user is already followed or not
+      if (isFollowing) {
+        // Unfollow the user
+        await axios.delete(
+          `https://levelart.up.railway.app/followers/${user._id}/unfollow`,
+          { headers }
+        );
+      } else {
+        // Follow the user
+        await axios.post(
+          `https://levelart.up.railway.app/followers/follow/${user._id}`,
+          { followedUserId: user._id },
+          { headers }
+        );
+      }
+    
+      // Update the UI to reflect the follow/unfollow action
+      const updatedResults = searchResults.map((result) =>
+        result._id === user._id
+          ? {
+              ...result,
+              followers: isFollowing
+                ? result.followers.filter((follower) => follower.userId !== user._id) // Remove the user from followers
+                : [...result.followers, { userId: user._id }], // Add the user to followers
+            }
+          : result
+      );
+      setSearchResults(updatedResults);
+    } catch (error) {
+      console.error("Error:", error.message);
+    }
+  };
+  
+  
+
   return (
     <SafeAreaView
-      style={styles.container}
-    
+      style={{ flex: 1, paddingHorizontal: 10, paddingVertical: 10 }}
     >
-      <View style={styles.innerContainer}>
-        <View style={styles.inputContainer}>
+      <View style={{ paddingTop: 30, paddingBottom: 100 }}>
+        <Text style={{ fontSize: 30, color: "#000", fontWeight: "600" }}>
+          Search
+        </Text>
+        <View
+          style={{
+            flexDirection: "row",
+            height: 45,
+            padding: 5,
+            backgroundColor: "#0000000e",
+            borderRadius: 8,
+            justifyContent: "center",
+            gap: 10,
+            alignItems: "center",
+            color: "#000",
+            marginTop: 10,
+          }}
+        >
+          <Feather name="search" size={20} color="black" />
           <TextInput
-            style={styles.input}
+            onChangeText={(text) => setSearchQuery(text)}
             placeholder="Search"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            onSubmitEditing={handleSearch}
+            placeholderTextColor={"#000"}
+            style={{ flex: 1, height: 45 }}
           />
-          <TouchableOpacity onPress={handleSearch} style={styles.searchIconContainer}>
-            <Feather name="search" size={20} color="black" />
-          </TouchableOpacity>
         </View>
-        {loading ? (
-          <Text style={styles.loadingText}>Loading...</Text>
-        ) : (
-          <FlatList
-            data={searchResults}
-            renderItem={({ item }) => (
-              <Animated.View style={{ ...styles.resultItem, opacity: fadeAnim }}>
-                <TouchableOpacity
-                  onPress={() => console.log('Pressed on', item.username)} // Replace with desired action
+        <FlatList
+          data={searchResults}
+          showsVerticalScrollIndicator={false}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              onPress={() =>
+                navigation.navigate("Profile", {
+                  item: item,
+                })
+              }
+            >
+              <View
+                style={{
+                  flexDirection: "row",
+                  marginTop: 13,
+                  borderRadius: 10,
+                  padding: 3,
+                }}
+              >
+                <Image
+                  source={{ uri: item.profilePic }}
+                  style={{ width: 40, height: 40, borderRadius: 50 }}
+                />
+                <View
+                  style={{
+                    flex: 1,
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    borderBottomWidth: 1,
+                    borderBottomColor: "#00000020",
+                    paddingBottom: 2,
+                  }}
                 >
-                  <Text style={styles.username}>{item.username}</Text>
-                </TouchableOpacity>
-              </Animated.View>
-            )}
-            keyExtractor={(item) => item._id.toString()}
-          />
-        )}
+                  <View>
+                    <View style={{ flexDirection: "row", alignItems: "center" }}>
+                      <Text
+                        style={{
+                          paddingLeft: 3,
+                          fontSize: 18,
+                          color: "black",
+                        }}
+                      >
+                        {item.fullname.length > 15
+                          ? `${item.fullname.slice(0, 15)}...`
+                          : item.fullname}
+                      </Text>
+                    </View>
+                    <Text
+                      style={{ paddingLeft: 3, fontSize: 18, color: "black" }}
+                    >
+                      {item.username.length > 10
+                        ? `${item.username.slice(0, 10)}...`
+                        : item.username}
+                    </Text>
+                    <Text
+                      style={{
+                        paddingLeft: 3,
+                        marginTop: 1,
+                        fontSize: 16,
+                        color: "#444",
+                      }}
+                    >
+                      {item.followers.length} followers
+                    </Text>
+                  </View>
+                  <View>
+                    <TouchableOpacity
+                      style={{
+                        borderRadius: 8,
+                        width: 100,
+                        flexDirection: "row",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        height: 35,
+                        borderWidth: 1,
+                        borderColor: "#0000004b",
+                      }}
+                      onPress={() => handleFollowUnfollow(item)}
+                    >
+                      <Text style={{ color: "black" }}>
+                        {item.followers.find((i) => i.userId === item._id)
+                          ? "Unfollow"
+                          : "Follow"}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            </TouchableOpacity>
+          )}
+        />
       </View>
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: 'white',
-  },
-  innerContainer: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 65,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: 'gray',
-    borderRadius: 25,
-    paddingHorizontal: 15,
-    marginBottom: 10,
-  },
-  input: {
-    flex: 1,
-    fontSize: 16,
-    paddingVertical: 10,
-  },
-  searchIconContainer: {
-    marginLeft: 10,
-  },
-  loadingText: {
-    textAlign: 'center',
-    marginTop: 20,
-    fontSize: 16,
-    color: 'black',
-  },
-  resultItem: {
-    marginBottom: 10,
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    borderWidth: 1,
-    borderColor: 'lightgray',
-    borderRadius: 25,
-    backgroundColor: 'white',
-    elevation: 3,
-  },
-  username: {
-    fontWeight: 'bold',
-    fontSize: 20,
-  },
-});
 
 export default SearchScreen;
