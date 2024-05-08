@@ -97,13 +97,12 @@ const HomeScreen = ({ route }) => {
 
   useEffect(() => {
     if (userIdSet) {
-      fetchPosts();
+      fetchPosts(); // Initial fetch
+      const interval = setInterval(fetchPosts, 5000); // Polling interval
+
+      return () => clearInterval(interval); // Cleanup interval on unmount
     }
   }, [userIdSet]);
-
-  useEffect(() => {
-    // fetchSavedPosts();
-  }, []);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -124,35 +123,23 @@ const HomeScreen = ({ route }) => {
         "Content-Type": "application/json",
       };
 
-      const GetUser = await axios.get(
-        `https://levelart.up.railway.app/users/${userId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const GetUser = await axios.get(`https://levelart.up.railway.app/users/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       setUserProfile(GetUser.data);
       console.log("Home user", GetUser.data);
 
-      const responseFollowings = await axios.get(
-        `https://levelart.up.railway.app/followers/${userId}/following`,
-        { headers }
-      );
+      const responseFollowings = await axios.get(`https://levelart.up.railway.app/followers/${userId}/following`, { headers });
       const followings = responseFollowings.data;
 
       const postsPromises = followings.map(async (followingId) => {
-        const response = await axios.get(
-          `https://levelart.up.railway.app/user/${followingId}`,
-          { headers }
-        );
+        const response = await axios.get(`https://levelart.up.railway.app/user/${followingId}`, { headers });
         return response.data;
       });
 
-      const responseUserPosts = await axios.get(
-        `https://levelart.up.railway.app/posts/user/${userId}`,
-        { headers }
-      );
+      const responseUserPosts = await axios.get(`https://levelart.up.railway.app/posts/user/${userId}`, { headers });
       const userPosts = responseUserPosts.data;
 
       const postsResponses = await Promise.all(postsPromises);

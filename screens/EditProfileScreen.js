@@ -95,17 +95,21 @@ const EditProfileScreen = () => {
   });
 
   const handleImagePicker = async () => {
-    const permissionResult =
-      await ImagePicker.requestMediaLibraryPermissionsAsync();
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (permissionResult.granted === false) {
       alert("Permission to access camera roll is required!");
       return;
     }
-
-    const pickerResult = await ImagePicker.launchImageLibraryAsync();
+  
+    const pickerResult = await ImagePicker.launchImageLibraryAsync({
+      allowsEditing: true, // Enable editing
+      aspect: [1, 1], // Aspect ratio (square)
+      quality: 1, // Image quality (from 0 to 1)
+    });
+  
     if (!pickerResult.canceled && pickerResult.assets.length > 0) {
       console.log("Selected image URI:", pickerResult.assets[0].uri); // Log the URI of the selected image
-
+  
       setUserProfileData({
         ...userProfileData,
         profilePic: pickerResult.assets[0].uri,
@@ -115,6 +119,7 @@ const EditProfileScreen = () => {
       console.log("Image picking cancelled or no image selected");
     }
   };
+  
 
   return (
     <>
