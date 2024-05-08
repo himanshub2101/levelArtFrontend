@@ -40,6 +40,7 @@ const ProfileScreen = () => {
   const [image, setImage] = useState("");
   const [isImageSelected, setIsImageSelected] = useState(false);
   const [loggedInUserId, setLoggedInUserId] = useState(null); // New state to hold the logged-in user's ID
+  const [isFollowing, setIsFollowing] = useState(false); // New state to indicate if the logged-in user is following the profile user
 
   const handleImagePicker = async () => {
     const permissionResult =
@@ -56,6 +57,33 @@ const ProfileScreen = () => {
       setIsImageSelected(true);
     } else {
       console.log("Image picking cancelled or no image selected");
+    }
+  };
+  const handleFollow = async () => {
+    if (!loggedInUserId || !userProfile) return;
+
+    try {
+      const authToken = await AsyncStorage.getItem("authToken");
+      const followAction = isFollowing ? "unfollow" : "follow";
+      const response = await axios.post(
+        `https://levelart.up.railway.app/followers/${userProfile._id}/${followAction}`,
+        null,
+        {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        setIsFollowing(!isFollowing);
+        await AsyncStorage.setItem(
+          `isFollowing_${userProfile._id}`,
+          JSON.stringify(!isFollowing)
+        );
+      }
+    } catch (error) {
+      console.error("Error toggling follow status:", error);
     }
   };
 
@@ -97,7 +125,6 @@ const ProfileScreen = () => {
 
         if (profileResponse) {
           const { user, followers, followings, bio } = profileResponse.data;
-          // Corrected setUser function
           setUserProfile(user);
           setFollowers(followers?.length || 0);
           setFollowings(followings?.length || 0);
@@ -143,11 +170,7 @@ const ProfileScreen = () => {
         const userObject = GetUserResponse.data;
         setUserProfile(userObject);
   
-        // Extract username from the userObject
         const usernameOfCurrentUser = userObject?.username;
-        console.log("Username of current user:", usernameOfCurrentUser);
-  
-        // Set header options
         navigation.setOptions({
           headerTitle: "",
           headerLeft: () => (
@@ -164,6 +187,13 @@ const ProfileScreen = () => {
             </TouchableOpacity>
           ),
         });
+
+        const storedFollowStatus = await AsyncStorage.getItem(
+          `isFollowing_${userId}`
+        );
+        if (storedFollowStatus !== null) {
+          setIsFollowing(JSON.parse(storedFollowStatus));
+        }
       } catch (error) {
         console.error("Error fetching profile:", error);
       }
@@ -175,7 +205,6 @@ const ProfileScreen = () => {
       console.log("userId is undefined");
     }
   }, [userProfile, navigation]);
-  
 
   return (
     <>
@@ -222,10 +251,12 @@ const ProfileScreen = () => {
               </View>
             </View>
           </View>
-          {/* Render the follow button only if the profile does not belong to the logged-in user */}
-          {userId !== loggedInUserId && (
-            <TouchableOpacity style={styles.followButton}>
-              <Text style={styles.followButtonText}>Follow</Text>
+          {userId !== userProfile?._id && (
+            <TouchableOpacity 
+              style={[styles.followButton, { backgroundColor: isFollowing ? 'grey' : 'blue' }]}
+              onPress={handleFollow}
+            >
+              <Text style={styles.followButtonText}>{isFollowing ? 'Unfollow' : 'Follow'}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -316,7 +347,6 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   followButton: {
-    backgroundColor: "blue",
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 5,

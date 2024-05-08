@@ -142,19 +142,22 @@ const ThreadsScreen = () => {
         </TouchableOpacity>
       </View>
       <View style={styles.middleContainer}>
-        <View style={styles.middleContainerTop}>
-          <Image
-            source={{ uri: userProfile?.profilePic }}
-            style={styles.ProfileImage}
-          />
-          <TextInput
-            value={content}
-            onChangeText={setContent}
-            placeholder="What's on your mind?"
-            multiline
-            style={styles.input}
-          />
-        </View>
+      <View style={styles.middleContainerTop}>
+  {userProfile?.profilePic && userProfile?.profilePic !== "" && (
+    <Image
+      source={{ uri: userProfile?.profilePic }}
+      style={styles.ProfileImage}
+    />
+  )}
+  <TextInput
+    value={content}
+    onChangeText={setContent}
+    placeholder="What's on your mind?"
+    multiline
+    style={styles.input}
+  />
+</View>
+
 
         {isImageSelected && (
           <View
