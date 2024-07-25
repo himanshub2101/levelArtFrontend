@@ -1,32 +1,121 @@
+// Import useState and useEffect
 import React, { useEffect, useState, useContext } from "react";
-import { StyleSheet, Text, View, Image, Pressable, FlatList, ScrollView } from "react-native";
+import {
+  StyleSheet,
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  SafeAreaView,
+} from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import { UserType } from "../UserContext";
+import Icon from "react-native-vector-icons/Ionicons";
+import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useNavigation } from "@react-navigation/native";
-import { createContext } from 'react';
-import { UserType } from '../UserContext';
-import Icon from 'react-native-vector-icons/Ionicons';
-import Sidebar from "./SideBar";
+import ImagesScreen from "./ImagesScreen";
+import TweetsScreen from "./TweetsScreen";
+import {
+  MaterialCommunityIcons,
+  AntDesign,
+  MaterialIcons,
+} from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
+
+const Tab = createMaterialTopTabNavigator();
+
+const ImagesTabScreen = ({ posts }) => <ImagesScreen posts={posts} />;
+const TweetsTabScreen = ({ posts }) => <TweetsScreen posts={posts} />;
+const TagTabScreen = ({ posts }) => <TweetsScreen posts={posts} />;
+
 const ProfileScreen = () => {
-  const [user, setUser] = useState("");
+  const navigation = useNavigation();
+  const { userId } = useContext(UserType); // Access userId from context
+  const [userProfile, setUserProfile] = useState(null);
   const [followers, setFollowers] = useState(0);
   const [followings, setFollowings] = useState(0);
   const [posts, setPosts] = useState([]);
-  const [replies, setReplies] = useState([]);
-  const navigation = useNavigation();
-  const { userId, setUserId } = useContext(UserType);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [bio, setBio] = useState("");
+  const [image, setImage] = useState("");
+  const [isImageSelected, setIsImageSelected] = useState(false);
+  const [loggedInUserId, setLoggedInUserId] = useState(null); // New state to hold the logged-in user's ID
+  const [isFollowing, setIsFollowing] = useState(false); // New state to indicate if the logged-in user is following the profile user
+
+  const handleImagePicker = async () => {
+    const permissionResult =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (permissionResult.granted === false) {
+      alert("Permission to access camera roll is required!");
+      return;
+    }
+
+    const pickerResult = await ImagePicker.launchImageLibraryAsync();
+    if (!pickerResult.canceled && pickerResult.assets.length > 0) {
+      console.log("Selected image URI:", pickerResult.assets[0].uri);
+      setImage(pickerResult.assets[0].uri);
+      setIsImageSelected(true);
+    } else {
+      console.log("Image picking cancelled or no image selected");
+    }
+  };
+  const handleFollow = async () => {
+    if (!loggedInUserId || !userProfile) return;
+
+    try {
+      const authToken = await AsyncStorage.getItem("authToken");
+      const followAction = isFollowing ? "unfollow" : "follow";
+      const response = await axios.post(
+        `https://levelart.up.railway.app/followers/${userProfile._id}/${followAction}`,
+        null,
+        {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        setIsFollowing(!isFollowing);
+        await AsyncStorage.setItem(
+          `isFollowing_${userProfile._id}`,
+          JSON.stringify(!isFollowing)
+        );
+      }
+    } catch (error) {
+      console.error("Error toggling follow status:", error);
+    }
+  };
+
+  useEffect(() => {
+    const fetchLoggedInUserId = async () => {
+      try {
+        const loggedInUserId = await AsyncStorage.getItem("userId");
+        setLoggedInUserId(loggedInUserId);
+      } catch (error) {
+        console.error("Error fetching logged-in user's ID:", error);
+      }
+    };
+
+    fetchLoggedInUserId();
+  }, []);
 
   useEffect(() => {
     const fetchProfile = async (userId) => {
       try {
-        // Get the authentication token from AsyncStorage
         const authToken = await AsyncStorage.getItem("authToken");
-        console.log("Auth Token From Profile:", authToken);
+        const GetUser = await axios.get(
+          `https://levelart.up.railway.app/users/${userId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+            },
+          }
+        );
+        setUserProfile(GetUser.data);
 
-        // Make a GET request to fetch profile information
         const profileResponse = await axios.get(
-          `https://192.168.1.14:3000/followers/${userId}/followers`,
+          `https://levelart.up.railway.app/followers/${userId}/followers`,
           {
             headers: {
               Authorization: `Bearer ${authToken}`,
@@ -34,32 +123,26 @@ const ProfileScreen = () => {
           }
         );
 
-        const { user, followers, followings } = profileResponse.data;
-        setUser(user);
-        setFollowers(followers?.length || 0);
-        setFollowings(followings?.length || 0);
+        if (profileResponse) {
+          const { user, followers, followings, bio } = profileResponse.data;
+          setUserProfile(user);
+          setFollowers(followers?.length || 0);
+          setFollowings(followings?.length || 0);
+          setBio(bio || "");
 
-        // Fetch user posts
-        const postsResponse = await axios.get(
-          `https://192.168.1.14:3000/posts/user/${userId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${authToken}`,
-            },
-          }
-        );
-        setPosts(postsResponse.data);
+          const postsResponse = await axios.get(
+            `https://levelart.up.railway.app/posts/user/${userId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${authToken}`,
+              },
+            }
+          );
 
-        // Fetch user replies
-        const repliesResponse = await axios.get(
-          `https://192.168.1.14:3000/posts/user/${userId}/replies`,
-          {
-            headers: {
-              Authorization: `Bearer ${authToken}`,
-            },
+          if (postsResponse) {
+            setPosts(postsResponse.data);
           }
-        );
-        setReplies(repliesResponse.data);
+        }
       } catch (error) {
         console.error("Error fetching profile:", error);
       }
@@ -72,120 +155,209 @@ const ProfileScreen = () => {
     }
   }, [userId]);
 
-  const logout = async () => {
-    try {
-      await AsyncStorage.removeItem("authToken");
-      console.log("Cleared auth token");
-      navigation.replace("Login");
-    } catch (error) {
-      console.error("Error clearing auth token:", error);
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      try {
+        const authToken = await AsyncStorage.getItem("authToken");
+        const GetUserResponse = await axios.get(
+          `https://levelart.up.railway.app/users/${userId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+            },
+          }
+        );
+        const userObject = GetUserResponse.data;
+        setUserProfile(userObject);
+  
+        const usernameOfCurrentUser = userObject?.username;
+        navigation.setOptions({
+          headerTitle: "",
+          headerLeft: () => (
+            <Text style={{ marginLeft: 10, fontWeight: "500", fontSize: 18 }}>
+              {usernameOfCurrentUser || "Loading..."}
+            </Text>
+          ),
+          headerRight: () => (
+            <TouchableOpacity
+              style={styles.settingsIcon}
+              onPress={() => navigation.navigate("Settings")}
+            >
+              <Icon name="settings-outline" size={30} color="#333" />
+            </TouchableOpacity>
+          ),
+        });
+
+        const storedFollowStatus = await AsyncStorage.getItem(
+          `isFollowing_${userId}`
+        );
+        if (storedFollowStatus !== null) {
+          setIsFollowing(JSON.parse(storedFollowStatus));
+        }
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      }
+    };
+  
+    if (userId) {
+      loadUserProfile();
+    } else {
+      console.log("userId is undefined");
     }
-  };
-
-  const handleSettingsPress = () => {
-    navigation.navigate('Settings');
-  };
-
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
-
-  const closeSidebar = () => {
-    setIsSidebarOpen(false);
-  };
-
-  const renderPostItem = ({ item }) => (
-    <View style={styles.postContainer}>
-      <Image
-        style={styles.postImage}
-        source={{
-          uri: item.img || "https://via.placeholder.com/150",
-        }}
-      />
-      <View style={styles.postContent}>
-        <Text style={styles.postText}>{item.text}</Text>
-      </View>
-    </View>
-  );
-
-  const renderReplyItem = ({ item }) => (
-    <View style={styles.replyContainer}>
-      <Text>{item.text}</Text>
-    </View>
-  );
+  }, [userProfile, navigation]);
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.profileInfo}>
-      <View style={styles.profileHeader}>
-        <Text style={styles.username}>{user}</Text>
-        <Pressable style={styles.settingsIcon} onPress={handleSettingsPress}>
-        <Icon name="settings-outline" size={30} color="#333" />
-      </Pressable>
-      </View>
-           {/* Sidebar */}
+    <>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.profileTop}>
+          <View style={styles.userInfo}>
+            <TouchableOpacity
+              onPress={handleImagePicker}
+              style={{ position: "relative" }}
+            >
+              {userProfile?.profilePic ? (
+                <Image
+                  style={styles.profileImage}
+                  source={{ uri: userProfile?.profilePic }}
+                />
+              ) : (
+                <Image
+                  style={styles.profileImage}
+                  source={{
+                    uri: "https://cdn-icons-png.flaticon.com/128/149/149071.png",
+                  }}
+                />
+              )}
 
-        <View style={styles.bioContainer}>
-          <Image
-            style={styles.profileImage}
-            source={{
-              uri: "https://cdn-icons-png.flaticon.com/128/149/149071.png",
-            }}
-          />
-          <View style={styles.bioTextContainer}>
-            <Text style={styles.bioText}>BTech.</Text>
-            <Text style={styles.bioText}>Movie Buff | Musical Nerd</Text>
-            <Text style={styles.bioText}>Love Yourself</Text>
+              <TouchableOpacity
+                onPress={handleImagePicker}
+                style={{ position: "absolute", bottom: -3, right: -3 }}
+              >
+                <AntDesign name="pluscircle" size={24} color="blue" />
+              </TouchableOpacity>
+            </TouchableOpacity>
+            <View style={styles.userStats}>
+              <View style={styles.userStatsItem}>
+                <Text style={styles.statsCount}>{posts.length}</Text>
+                <Text style={styles.statsText}> posts</Text>
+              </View>
+              <View style={styles.userStatsItem}>
+                <Text style={styles.statsCount}>{followers}</Text>
+                <Text style={styles.statsText}> followers</Text>
+              </View>
+              <View style={styles.userStatsItem}>
+                <Text style={styles.statsCount}>{followings} </Text>
+                <Text style={styles.statsText}>following</Text>
+              </View>
+            </View>
+          </View>
+          {userId !== userProfile?._id && (
+            <TouchableOpacity 
+              style={[styles.followButton, { backgroundColor: isFollowing ? 'grey' : 'blue' }]}
+              onPress={handleFollow}
+            >
+              <Text style={styles.followButtonText}>{isFollowing ? 'Unfollow' : 'Follow'}</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        <View style={styles.profileInfo}>
+          <View style={styles.bioContainer}>
+            <View style={styles.bioTextContainer}>
+              <View style={{ flexDirection: "row", gap: 20 }}>
+                {userProfile && userProfile?.fullname ? (
+                  <Text style={styles.bioLabel}>{userProfile?.fullname}</Text>
+                ) : (
+                  <Text style={styles.bioLabel}>Full Name</Text>
+                )}
+                {userProfile && userProfile?.pronouns ? (
+                  <Text>{userProfile?.pronouns}</Text>
+                ) : null}
+              </View>
+              {userProfile && userProfile?.bio ? (
+                <View>
+                  <Text>{userProfile?.bio}</Text>
+                </View>
+              ) : null}
+
+              <TouchableOpacity
+                style={styles.updateBioButton}
+                onPress={() => navigation.navigate("EditProfile")}
+              >
+                <Text style={styles.updateBioButtonText}>Edit Profile</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
 
-        <Text style={styles.followText}>{followers} followers</Text>
-        <Text style={styles.followText}>{followings} followings</Text>
-      </View>
-
-      <FlatList
-        data={posts}
-        renderItem={renderPostItem}
-        keyExtractor={(item) => item._id}
-        style={styles.postsList}
-      />
-
-      {/* Post Replies Section */}
-      <View style={styles.repliesSection}>
-        <Text style={styles.sectionTitle}>Post Replies</Text>
-        <FlatList
-          data={replies}
-          renderItem={renderReplyItem}
-          keyExtractor={(item) => item._id}
-          style={styles.repliesList}
-        />
-      </View>
-
-      <View style={styles.buttonsContainer}>
-        <Pressable style={styles.button} onPress={logout}>
-          <Text style={styles.buttonText}>Logout</Text>
-        </Pressable>
-      </View>
-    </ScrollView>
+        <Tab.Navigator>
+          <Tab.Screen
+            name="Posts"
+            options={{
+              tabBarIcon: ({ color, size }) => (
+                <MaterialCommunityIcons name="grid" size={24} color="black" />
+              ),
+            }}
+          >
+            {() => <ImagesTabScreen posts={posts.filter((post) => post.img)} />}
+          </Tab.Screen>
+          <Tab.Screen
+            name="Tweets"
+            options={{
+              tabBarIcon: ({ color, size }) => (
+                <MaterialCommunityIcons
+                  name="message-text"
+                  size={24}
+                  color="black"
+                />
+              ),
+            }}
+          >
+            {() => <TweetsTabScreen posts={posts.filter((post) => !post.img)} />}
+          </Tab.Screen>
+          <Tab.Screen
+            name="Tag"
+            options={{
+              tabBarIcon: ({ color, size }) => (
+                <MaterialIcons name="tag" size={24} color="black" />
+              ),
+            }}
+          >
+            {() => <TagTabScreen posts={posts.filter((post) => !post.img)} />}
+          </Tab.Screen>
+        </Tab.Navigator>
+      </SafeAreaView>
+    </>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,
-    padding: 15,
+    flex: 1,
+    backgroundColor: "white",
+  },
+  profileTop: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+  },
+  settingsIcon: {
+    marginRight: 10,
+  },
+  followButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 5,
+  },
+  followButtonText: {
+    color: "white",
+    fontWeight: "bold",
   },
   profileInfo: {
+    flexDirection: "column",
     marginBottom: 20,
-  },
-  profileHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 10,
-  },
-  username: {
-    fontSize: 20,
-    fontWeight: "bold",
   },
   bioContainer: {
     flexDirection: "row",
@@ -193,76 +365,53 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   profileImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    resizeMode: "contain",
+    width: 80,
+    height: 80,
+    borderRadius: 50,
+    resizeMode: "cover",
   },
   bioTextContainer: {
-    marginLeft: 10,
-  },
-  bioText: {
-    fontSize: 15,
-    fontWeight: "400",
-  },
-  followText: {
-    color: "gray",
-    fontSize: 15,
-  },
-  postsList: {
-    marginBottom: 20,
-  },
-  postContainer: {
-    flexDirection: "row",
-    marginBottom: 10,
-  },
-  postImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginRight: 10,
-  },
-  postContent: {
     flex: 1,
+    alignItems: "flex-start",
+    padding: 10,
   },
-  postText: {
-    fontSize: 16,
-  },
-  repliesSection: {
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: 18,
+  bioLabel: {
     fontWeight: "bold",
-    marginBottom: 10,
+    marginBottom: 5,
   },
-  repliesList: {
-    marginBottom: 20,
-  },
-  replyContainer: {
-    padding: 10,
-    backgroundColor: "#F5F5F5",
-    marginBottom: 10,
-  },
-  buttonsContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  button: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 10,
-    borderColor: "#D0D0D0",
-    borderWidth: 1,
+  updateBioButton: {
+    backgroundColor: "black",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
     borderRadius: 5,
+    marginTop: 8,
   },
-  buttonText: {
-    fontSize: 15,
+  updateBioButtonText: {
+    color: "white",
+    fontWeight: "bold",
   },
-  settingsIcon: {
-    marginLeft: 'auto',
+  userInfo: {
+    flexDirection: "row",
+    flex: 1,
+  },
+  userStats: {
+    marginLeft: 20,
+    flexDirection: "row",
+    flex: 1,
+    justifyContent: "space-evenly",
+    alignItems: "center",
+  },
+  userStatsItem: {
+    alignItems: "center",
+  },
+
+  statsText: {
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  statsCount: {
+    fontWeight: "bold",
+    fontSize: 22,
   },
 });
 

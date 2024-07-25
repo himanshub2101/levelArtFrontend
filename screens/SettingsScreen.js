@@ -1,34 +1,315 @@
 import React from "react";
-import { StyleSheet, Text, View, Pressable } from "react-native";
-import Icon from 'react-native-vector-icons/Ionicons';
+import {
+  StyleSheet,
+  Text,
+  View,
+  Pressable,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+} from "react-native";
+import Icon from "react-native-vector-icons/Ionicons";
+import {
+  Feather,
+  MaterialCommunityIcons,
+  Entypo,
+  MaterialIcons,
+  Fontisto,
+  Octicons,
+  AntDesign,
+  FontAwesome6,
+} from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useNavigation } from "@react-navigation/native";
 
-const SettingsScreen = ({ navigation }) => {
-  // Function to handle theme change
-  const handleThemeChange = () => {
-    // Add logic to change the theme
-    console.log("Theme changed");
+const SettingsScreen = () => {
+  const navigation = useNavigation();
+  const logout = async () => {
+    try {
+      // const authToken = await AsyncStorage.getItem("authToken");
+      // await AsyncStorage.removeItem("authToken");
+      await AsyncStorage.clear();
+      console.log("Cleared auth token");
+      navigation.navigate("Login");
+    } catch (error) {
+      console.error("Error clearing auth token:", error);
+    }
   };
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        {/* Theme change option */}
-        <Pressable style={styles.themeIcon} onPress={handleThemeChange}>
-          <Icon name="color-palette-outline" size={30} color="#333" />
-        </Pressable>
-        <Text style={styles.title}>Settings</Text>
-      </View>
-      <View style={styles.options}>
-        <Pressable style={styles.option} onPress={() => navigation.navigate("AccountsCenter")}>
-          <Text>Accounts Center</Text>
-        </Pressable>
-        <Pressable style={styles.option} onPress={() => navigation.navigate("Notifications")}>
-          <Text>Notifications</Text>
-        </Pressable>
-        <Pressable style={styles.option} onPress={() => navigation.navigate("SecurityAccountAccess")}>
-          <Text>Security & Account Access</Text>
-        </Pressable>
-      </View>
+      <ScrollView>
+        <View
+          style={{
+            flexDirection: "row",
+            gap: 10,
+            alignItems: "center",
+            backgroundColor: "#e0e0e0",
+            borderWidth: 1,
+            borderColor: "#e0e0e0",
+            paddingHorizontal: 10,
+            paddingVertical: 10,
+            borderRadius: 20,
+          }}
+        >
+          <Feather name="search" size={20} color="black" />
+          <TextInput placeholder="Search" />
+        </View>
+        <View style={{ marginTop: 20 }}>
+          <Text>Your account</Text>
+          <TouchableOpacity
+            style={{
+              flexDirection: "row",
+              gap: 10,
+              alignItems: "center",
+              marginTop: 20,
+            }}
+          >
+            <MaterialCommunityIcons
+              name="account-circle-outline"
+              size={24}
+              color="black"
+            />
+            <View>
+              <Text style={{ fontSize: 20, fontWeight: "bold" }}>
+                Accounts Center
+              </Text>
+              <Text style={{ color: "gray", fontSize: 16 }}>
+                Password, security, personal details
+              </Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.itemContainer}>
+          <Text>How you use LevelArt</Text>
+          <View style={styles.useContainermain}>
+            <TouchableOpacity style={styles.useContainerTouchable}>
+              <View style={styles.useContainer}>
+                <MaterialCommunityIcons
+                  name="bookmark-outline"
+                  size={24}
+                  color="black"
+                />
+                <Text style={styles.useContainerText}>Save</Text>
+              </View>
+              <MaterialIcons
+                name="keyboard-arrow-right"
+                size={24}
+                color="black"
+              />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.useContainerTouchable}>
+              <View style={styles.useContainer}>
+                <Entypo name="back-in-time" size={24} color="black" />
+                <Text style={styles.useContainerText}>Archive</Text>
+              </View>
+              <MaterialIcons
+                name="keyboard-arrow-right"
+                size={24}
+                color="black"
+              />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.useContainerTouchable}>
+              <View style={styles.useContainer}>
+                <MaterialIcons name="timeline" size={24} color="black" />
+                <Text style={styles.useContainerText}>Your Activity</Text>
+              </View>
+              <MaterialIcons
+                name="keyboard-arrow-right"
+                size={24}
+                color="black"
+              />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.useContainerTouchable}>
+              <View style={{ ...styles.useContainer, gap: 25 }}>
+                <Fontisto name="bell" size={24} color="black" />
+                <Text style={styles.useContainerText}>Notification</Text>
+              </View>
+              <MaterialIcons
+                name="keyboard-arrow-right"
+                size={24}
+                color="black"
+              />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.useContainerTouchable}>
+              <View style={styles.useContainer}>
+                <MaterialIcons name="access-time" size={24} color="black" />
+                <Text style={styles.useContainerText}>Time spent</Text>
+              </View>
+              <MaterialIcons
+                name="keyboard-arrow-right"
+                size={24}
+                color="black"
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+        <View style={styles.itemContainer}>
+          <Text>Who can see your content</Text>
+          <View style={styles.useContainermain}>
+            <TouchableOpacity style={styles.useContainerTouchable}>
+              <View style={{ ...styles.useContainer, gap: 25 }}>
+                <Octicons name="lock" size={24} color="black" />
+                <Text style={styles.useContainerText}>Account privacy</Text>
+              </View>
+              <MaterialIcons
+                name="keyboard-arrow-right"
+                size={24}
+                color="black"
+              />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.useContainerTouchable}>
+              <View style={styles.useContainer}>
+                <MaterialCommunityIcons
+                  name="star-circle-outline"
+                  size={24}
+                  color="black"
+                />
+                <Text style={styles.useContainerText}>Close friends</Text>
+              </View>
+              <MaterialIcons
+                name="keyboard-arrow-right"
+                size={24}
+                color="black"
+              />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.useContainerTouchable}>
+              <View style={styles.useContainer}>
+                <Entypo name="block" size={24} color="black" />
+                <Text style={styles.useContainerText}>Block</Text>
+              </View>
+              <MaterialIcons
+                name="keyboard-arrow-right"
+                size={24}
+                color="black"
+              />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.useContainerTouchable}>
+              <View style={styles.useContainer}>
+                <Feather name="shield-off" size={24} color="black" />
+                <Text style={styles.useContainerText}>Hide story and live</Text>
+              </View>
+              <MaterialIcons
+                name="keyboard-arrow-right"
+                size={24}
+                color="black"
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+        <View style={styles.itemContainer}>
+          <Text>How others can interact with you</Text>
+          <View style={styles.useContainermain}>
+            <TouchableOpacity style={styles.useContainerTouchable}>
+              <View style={styles.useContainer}>
+                <AntDesign name="message1" size={24} color="black" />
+                <Text style={styles.useContainerText}>Messages</Text>
+              </View>
+              <MaterialIcons
+                name="keyboard-arrow-right"
+                size={24}
+                color="black"
+              />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.useContainerTouchable}>
+              <View style={styles.useContainer}>
+                <Fontisto name="hashtag" size={24} color="black" />
+                <Text style={styles.useContainerText}>Tag</Text>
+              </View>
+              <MaterialIcons
+                name="keyboard-arrow-right"
+                size={24}
+                color="black"
+              />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.useContainerTouchable}>
+              <View style={styles.useContainer}>
+                <MaterialCommunityIcons
+                  name="comment-multiple-outline"
+                  size={24}
+                  color="black"
+                />
+                <Text style={styles.useContainerText}>Comments</Text>
+              </View>
+              <MaterialIcons
+                name="keyboard-arrow-right"
+                size={24}
+                color="black"
+              />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.useContainerTouchable}>
+              <View style={styles.useContainer}>
+                <AntDesign name="sharealt" size={24} color="black" />
+                <Text style={styles.useContainerText}>Sharing</Text>
+              </View>
+              <MaterialIcons
+                name="keyboard-arrow-right"
+                size={24}
+                color="black"
+              />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.useContainerTouchable}>
+              <View style={styles.useContainer}>
+                <MaterialIcons name="person-add-alt" size={24} color="black" />
+                <Text style={styles.useContainerText}>Follow</Text>
+              </View>
+              <MaterialIcons
+                name="keyboard-arrow-right"
+                size={24}
+                color="black"
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+        <View style={styles.itemContainer}>
+          <Text>More info and support</Text>
+          <View style={styles.useContainermain}>
+            <TouchableOpacity style={styles.useContainerTouchable}>
+              <View style={styles.useContainer}>
+                <MaterialIcons name="help-outline" size={24} color="black" />
+                <Text style={styles.useContainerText}>Help</Text>
+              </View>
+              <MaterialIcons
+                name="keyboard-arrow-right"
+                size={24}
+                color="black"
+              />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.useContainerTouchable}>
+              <View style={styles.useContainer}>
+                <MaterialCommunityIcons
+                  name="account-outline"
+                  size={24}
+                  color="black"
+                />
+                <Text style={styles.useContainerText}>Account Status</Text>
+              </View>
+              <MaterialIcons
+                name="keyboard-arrow-right"
+                size={24}
+                color="black"
+              />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.useContainerTouchable}>
+              <View style={styles.useContainer}>
+                <AntDesign name="infocirlceo" size={24} color="black" />
+                <Text style={styles.useContainerText}>About</Text>
+              </View>
+              <MaterialIcons
+                name="keyboard-arrow-right"
+                size={24}
+                color="black"
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+        <View style={styles.itemContainer}>
+          <Text>Login</Text>
+          <TouchableOpacity style={{ marginTop: 20 }} onPress={logout}>
+            <Text style={styles.useContainerText}>Log out</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </View>
   );
 };
@@ -36,28 +317,32 @@ const SettingsScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "white",
-    padding: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    backgroundColor: "#fff",
   },
-  header: {
+  itemContainer: {
+    marginTop: 30,
+    borderTopWidth: 2,
+    borderTopColor: "#e0e0e0",
+    paddingTop: 10,
+  },
+  useContainermain: {
+    gap: 15,
+    marginTop: 20,
+  },
+  useContainerTouchable: {
     flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  useContainer: {
+    flexDirection: "row",
+    gap: 20,
     alignItems: "center",
-    marginBottom: 20,
+    paddingHorizontal: 1,
   },
-  themeIcon: {
-    marginRight: 10,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-  },
-  options: {
-    marginTop: 10,
-  },
-  option: {
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
+  useContainerText: {
+    fontSize: 18,
   },
 });
 

@@ -2,7 +2,7 @@
   "expo": {
     "name": "levelart",
     "slug": "levelart",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/logo.png",
     "userInterfaceStyle": "dark",
@@ -14,26 +14,23 @@
     "assetBundlePatterns": [
       "**/*"
     ],
-    "permissions": {
-      "mediaLibrary": true
-    },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.mrfrek19.levelart"
+      "bundleIdentifier": "com.mrfreak19.levelart"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/logo.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.mrfrek19.levelart"
+      "package": "com.mrfreak19.levelart"
     },
     "web": {
       "favicon": "./assets/logo.png"
     },
     "extra": {
       "eas": {
-        "projectId": "6aef92c6-1075-4f76-b409-c8e7241b5b7a"
+        "projectId": "798270d0-d024-4111-be16-c7d87e6531ab"
       }
     }
   }

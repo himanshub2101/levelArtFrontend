@@ -9,6 +9,7 @@ import {
   TextInput,
   Pressable,
   Alert,
+  TouchableOpacity,
 } from "react-native";
 import React, { useState, useEffect } from "react";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -17,12 +18,16 @@ import { useNavigation } from "@react-navigation/native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import logo from '../assets/logo.png';
+import facebooklogo from '../assets/facebookLogo.png';
+import GoogleLogo from '../assets/googleLogo.png';
 
 // Define the LoginScreen component
 const LoginScreen = () => {
   // Define state variables
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [emailError, setEmailError] = useState({ isError: false, message: "" });
+  const [passwordError, setPasswordError] = useState({ isError: false, message: "" });
   const navigation = useNavigation();
 
   // Effect hook to check login status on component mount
@@ -42,16 +47,67 @@ const LoginScreen = () => {
     };
 
     checkLoginStatus();
+
+    GoogleSignin.configure({
+      webClientId: 'YOUR_WEB_CLIENT_ID_HERE',
+      offlineAccess: true,
+    });
+
   }, []);
 
 
+  const handleGoogleSignIn = async () => {
+    try {
+      await GoogleSignin.hasPlayServices();
+      const userInfo = await GoogleSignin.signIn();
+      console.log(userInfo);
+      // Now you can use userInfo.user to get user details
+    } catch (error) {
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+        // user cancelled the login flow
+      } else if (error.code === statusCodes.IN_PROGRESS) {
+        // operation (e.g. sign in) is in progress already
+      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        // play services not available or outdated
+      } else {
+        // some other error happened
+      }
+    }
+  }
+
+  const handleEmailChange = (text) => {
+    const normalizedEmail = text.trim().toLowerCase();
+
+    setEmail(normalizedEmail);
+    
+    if (emailError.isError) {
+      setEmailError({ isError: false, message: "" });
+    }
+  };
+
+  const handlePasswordChange = (text) => {
+    setPassword(text);
+    if (passwordError.isError) {
+      setPasswordError({ isError: false, message: "" });
+    }
+  };
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert("Email and password are required");
-      return;
+    // if (!email || !password) {
+    //   Alert.alert("Email and password are required");
+    //   return;
+    // }
+    let hasError = false;
+    if (!email) {
+      setEmailError({ isError: true, message: "Please enter your email" });
+      hasError = true;
     }
-  
+    if (!password) {
+      setPasswordError({ isError: true, message: "Please enter your password" });
+      hasError = true;
+    }
+    if (hasError) return;
+
     try {
       const user = {
         email: email,
@@ -59,7 +115,7 @@ const LoginScreen = () => {
       };
   
       // Use axios.post which returns a promise
-      const response = await axios.post("http://192.168.1.14:3000/auth/login", user);
+      const response = await axios.post("https://levelart.up.railway.app/auth/login", user);
   
       // Check if the response status is 200 (OK)
       if (response.status === 200) {
@@ -166,7 +222,7 @@ const LoginScreen = () => {
             />
             <TextInput
               value={email}
-              onChangeText={(text) => setEmail(text)}
+              onChangeText={handleEmailChange}
               placeholderTextColor={"gray"}
               style={{
                 color: "gray",
@@ -176,7 +232,9 @@ const LoginScreen = () => {
               }}
               placeholder="enter your Email"
             />
+
           </View>
+             {emailError.isError && <Text style={styles.errorMessage}>{emailError.message}</Text>}
 
           <View style={{ marginTop: 30 }}>
             <View
@@ -199,7 +257,7 @@ const LoginScreen = () => {
               <TextInput
                 secureTextEntry={true}
                 value={password}
-                onChangeText={(text) => setPassword(text)}
+                onChangeText={handlePasswordChange}
                 placeholderTextColor={"gray"}
                 style={{
                   color: "gray",
@@ -210,6 +268,7 @@ const LoginScreen = () => {
                 placeholder="enter your Password"
               />
             </View>
+               {passwordError.isError && <Text style={styles.errorMessage}>{passwordError.message}</Text>}
           </View>
 
           <View
@@ -264,6 +323,18 @@ const LoginScreen = () => {
             Don't have an account? Sign up
           </Text>
         </Pressable>
+        <View style={{flexDirection:"row",flex:1,gap:40,justifyContent:"center",marginTop:20}}>
+  <GoogleSigninButton
+    style={{ width: 43, height: 43 }}
+    size={GoogleSigninButton.Size.Icon}
+    color={GoogleSigninButton.Color.Dark}
+    onPress={handleGoogleSignIn}
+  />
+  <TouchableOpacity >
+    <Image source={facebooklogo} style={{width:40, height:40,overflow:'hidden',borderRadius:50}}/>
+  </TouchableOpacity>
+</View>
+
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -273,4 +344,10 @@ const LoginScreen = () => {
 export default LoginScreen;
 
 // Define styles for the LoginScreen component
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  errorMessage: {
+    color: "red",
+    // marginTop: 5,
+    width: "100%",
+  },
+});

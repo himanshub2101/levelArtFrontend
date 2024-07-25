@@ -1,16 +1,44 @@
-import React, { useEffect, useContext, useState, useCallback } from "react";
-import { StyleSheet, Text, View, ScrollView, Image, RefreshControl, TouchableOpacity, Modal, Alert, TextInput, Dimensions } from "react-native";
+import React, {
+  useEffect,
+  useContext,
+  useState,
+  useCallback,
+  useLayoutEffect,
+} from "react";
+import {
+  StyleSheet,
+  Text,
+  View,
+  ScrollView,
+  Image,
+  RefreshControl,
+  TouchableOpacity,
+  SafeAreaView,
+  Modal,
+  TextInput,
+  Alert,
+  Dimensions,
+  PanResponder,
+} from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import jwt_decode from "jwt-decode";
 import axios from "axios";
-import { AntDesign, FontAwesome, Ionicons } from "@expo/vector-icons";
-import logo from '../assets/logo.png';
+import {
+  AntDesign,
+  FontAwesome,
+  Ionicons,
+  Feather,
+  Octicons,
+} from "@expo/vector-icons";
+import logo from "../assets/logo.png";
 import { UserType } from "../UserContext";
 import MessageContainer from "../components/messageContainer"; // Import MessageContainer component
-// Import the necessary icon
-import { Feather } from "@expo/vector-icons";
+import AnimatedMessage from "../components/AnimatedMessage"; // Import AnimatedMessage component
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 
 const HomeScreen = ({ route }) => {
+  const navigation = useNavigation();
   const { userId, setUserId } = useContext(UserType);
   const [posts, setPosts] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -19,8 +47,30 @@ const HomeScreen = ({ route }) => {
   const [selectedPost, setSelectedPost] = useState(null); // State to store the selected post
   const [modalVisible, setModalVisible] = useState(false); // State to manage the modal visibility
   const [showCommentInput, setShowCommentInput] = useState(false); // State to manage comment input visibility
-  const [commentText, setCommentText] = useState(''); // State to store the comment text
+  const [commentText, setCommentText] = useState(""); // State to store the comment text
   const [savedPosts, setSavedPosts] = useState([]); // State to store saved posts
+  const [showAnimatedMessage, setShowAnimatedMessage] = useState(false);
+  const [animatedMessage, setAnimatedMessage] = useState("");
+  const [userProfile, setUserProfile] = useState(null);
+  const [modalPosition, setModalPosition] = useState({ y: 0 });
+
+  const panResponder = PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onPanResponderMove: (evt, gestureState) => {
+      // Update modal position based on gesture movement
+      const newY = modalPosition.y + gestureState.dy;
+      setModalPosition({ x: modalPosition.x, y: newY });
+
+      // Check if modal reaches the bottom of the screen
+      const windowHeight = Dimensions.get("window").height;
+      const modalHeight = 600; // Assuming the modal height
+      const bottomThreshold = windowHeight - modalHeight;
+      if (newY >= bottomThreshold) {
+        // Close the modal
+        closeOptionsModal();
+      }
+    },
+  });
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -47,13 +97,12 @@ const HomeScreen = ({ route }) => {
 
   useEffect(() => {
     if (userIdSet) {
-      fetchPosts();
+      fetchPosts(); // Initial fetch
+      const interval = setInterval(fetchPosts, 5000); // Polling interval
+
+      return () => clearInterval(interval); // Cleanup interval on unmount
     }
   }, [userIdSet]);
-
-  useEffect(() => {
-    // fetchSavedPosts();
-  }, []);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -65,25 +114,45 @@ const HomeScreen = ({ route }) => {
     try {
       const token = await AsyncStorage.getItem("authToken");
       const decodedToken = jwt_decode(token);
+      const userId = decodedToken.sub;
+      console.log("UserData", decodedToken);
+      console.log("userId", userId);
+
       const headers = {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       };
 
-      const responseFollowings = await axios.get(`http://192.168.1.14:3000/followers/${userId}/following`, { headers });
+      const GetUser = await axios.get(`https://levelart.up.railway.app/users/${userId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setUserProfile(GetUser.data);
+      console.log("Home user", GetUser.data);
+
+      const responseFollowings = await axios.get(`https://levelart.up.railway.app/followers/${userId}/following`, { headers });
       const followings = responseFollowings.data;
+
       const postsPromises = followings.map(async (followingId) => {
-        const response = await axios.get(`http://192.168.1.14:3000/user/${followingId}`, { headers });
+        const response = await axios.get(`https://levelart.up.railway.app/user/${followingId}`, { headers });
         return response.data;
       });
 
-      const responseUserPosts = await axios.get(`http://192.168.1.14:3000/posts/user/${userId}`, { headers });
+      const responseUserPosts = await axios.get(`https://levelart.up.railway.app/posts/user/${userId}`, { headers });
       const userPosts = responseUserPosts.data;
+
       const postsResponses = await Promise.all(postsPromises);
 
-      const allPosts = postsResponses.reduce((accumulator, currentPosts) => accumulator.concat(currentPosts), []);
+      const allPosts = postsResponses.reduce(
+        (accumulator, currentPosts) => accumulator.concat(currentPosts),
+        []
+      );
 
-      const combinedPosts = [...allPosts, ...userPosts].map(post => ({ ...post, liked: post.likes.includes(userId) }));
+      const combinedPosts = [...allPosts, ...userPosts].map((post) => ({
+        ...post,
+        liked: post.likes.includes(userId),
+      }));
       setPosts(combinedPosts);
     } catch (error) {
       console.log("Error fetching posts", error);
@@ -93,14 +162,26 @@ const HomeScreen = ({ route }) => {
   const handleLike = async (postId) => {
     try {
       const token = await AsyncStorage.getItem("authToken");
-      const response = await axios.post(`http://192.168.1.14:3000/posts/${postId}/like`, null, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setPosts(prevPosts =>
-        prevPosts.map(post =>
-          post._id === postId ? { ...post, liked: !post.liked, likes: post.liked ? post.likes.filter(id => id !== userId) : [...post.likes, userId] } : post
+      const response = await axios.post(
+        `https://levelart.up.railway.app/posts/${postId}/like`,
+        null,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post._id === postId
+            ? {
+                ...post,
+                liked: !post.liked,
+                likes: post.liked
+                  ? post.likes.filter((id) => id !== userId)
+                  : [...post.likes, userId],
+              }
+            : post
         )
       );
       console.log("Post liked/unliked successfully:", response.data.message);
@@ -115,19 +196,27 @@ const HomeScreen = ({ route }) => {
   };
 
   const closeOptionsModal = () => {
-    setSelectedPost(null);
     setModalVisible(false);
+    setSelectedPost(null);
+    setModalPosition({ y: 0 });
   };
 
   const toggleCommentInput = () => {
     setShowCommentInput(!showCommentInput);
+    setModalPosition({ y: 0 });
   };
 
-  const handleComment = async (postId) => {
+  const handleComment = () => {
     try {
-      console.log("Comment:", commentText);
-      setCommentText('');
-      setShowCommentInput(false);
+      const newComment = {
+        image: require("../assets/avatar.png"),
+        comment: commentText,
+        timing: "just now",
+        userName: "YourUsername",
+      };
+      setComments((prevComments) => [...prevComments, newComment]);
+
+      setCommentText("");
     } catch (error) {
       console.error("Error posting the comment", error);
     }
@@ -136,126 +225,335 @@ const HomeScreen = ({ route }) => {
   const handleSavePost = async (postId) => {
     try {
       const isSaved = savedPosts.includes(postId);
+      // Set the animated message state before updating savedPosts
+      setAnimatedMessage(
+        isSaved
+          ? "The post has been unsaved successfully!"
+          : "The post has been saved successfully!"
+      );
       const updatedSavedPosts = isSaved
         ? savedPosts.filter((savedPostId) => savedPostId !== postId)
         : [...savedPosts, postId];
       setSavedPosts(updatedSavedPosts);
-      await AsyncStorage.setItem("savedPosts", JSON.stringify(updatedSavedPosts));
+      await AsyncStorage.setItem(
+        "savedPosts",
+        JSON.stringify(updatedSavedPosts)
+      );
     } catch (error) {
       console.error("Error saving post:", error);
     }
   };
 
-  const renderPost = (post) => {
+  const handleAnimationEnd = () => {
+    setShowAnimatedMessage(false);
+  };
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerTitle: "",
+      headerLeft: () => (
+        <Image
+          style={{
+            width: 60,
+            height: 45,
+            resizeMode: "contain",
+            // marginLeft: 10,
+            marginTop: 19,
+            overflow: "hidden",
+          }}
+          source={logo}
+        />
+      ),
+      headerRight: () => (
+        <TouchableOpacity
+          style={{
+            marginRight: 10,
+          }}
+          onPress={() => navigation.navigate("All Friend list")}
+        >
+          <Ionicons name="chatbubble-outline" size={24} color="black" />
+        </TouchableOpacity>
+      ),
+    });
+  }, []);
+
+  const renderPost = (post, index) => {
     return (
-      <View key={`${post.postedBy}-${post.postId}`} style={styles.post}>
+      <View key={post._id} style={styles.post}>
         <View style={styles.postHeader}>
-          {post.user && post.user.profilePicture && (
-            <Image source={{ uri: post.user.profilePicture }} style={styles.profilePicture} />
-          )}
-          <Text style={styles.username}>{post.postedBy}</Text>
+          <View style={styles.postUserNameImg}>
+            {userProfile?.profilePic ? (
+              <Image
+                source={{ uri: userProfile?.profilePic }}
+                style={styles.profilePicture}
+              />
+            ) : (
+              <Image
+                source={require("../assets/avatar.png")}
+                style={styles.profilePicture}
+              />
+            )}
+            <Text style={styles.username}>{userProfile?.username}</Text>
+          </View>
           <TouchableOpacity onPress={() => openOptionsModal(post)}>
             <Ionicons name="ellipsis-vertical" size={24} color="black" />
           </TouchableOpacity>
         </View>
         <View style={styles.postContent}>
-          {post.text && <Text>{post.text}</Text>}
+          {post.text && <Text style={styles.captions}>{post.text}</Text>}
           {post.img && (
             <Image source={{ uri: post.img }} style={styles.postImage} />
           )}
           <View style={styles.actionButtons}>
-            <TouchableOpacity onPress={() => handleLike(post._id)} style={styles.actionButton}>
-              <AntDesign name={post.liked ? "heart" : "hearto"} size={30} color={post.liked ? "red" : "black"} />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={toggleCommentInput} style={styles.actionButton}>
-              <FontAwesome name="comment-o" size={30} color="black" />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleSavePost(post._id)} style={styles.saveButton}>
-            <Feather name={savedPosts.includes(post._id) ? "bookmark" : "bookmark-outline"} size={30} color={savedPosts.includes(post._id) ? "#000" : "#8e8e8e"} />
-          </TouchableOpacity>
+            <View style={styles.actionLeftButtons}>
+              <TouchableOpacity
+                onPress={() => handleLike(post._id)}
+                style={styles.actionButtons}
+              >
+                <AntDesign
+                  name={post.liked ? "heart" : "hearto"}
+                  size={24}
+                  color={post.liked ? "red" : "black"}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={toggleCommentInput}
+                style={styles.actionButtons}
+              >
+                <FontAwesome name="comment-o" size={24} color="black" />
+              </TouchableOpacity>
 
-            <TouchableOpacity onPress={() => {}} style={styles.actionButton}>
-              <Ionicons name="paper-plane-outline" size={30} color="black" />
-            </TouchableOpacity>
+              <TouchableOpacity onPress={() => {}} style={styles.actionButtons}>
+                <Ionicons name="paper-plane-outline" size={24} color="black" />
+              </TouchableOpacity>
+            </View>
+            <View>
+              <TouchableOpacity
+                onPress={() => {
+                  handleSavePost(post._id);
+                  // Add code to show the animated message
+                  setShowAnimatedMessage(true);
+                }}
+                style={styles.saveButton}
+              >
+                <Ionicons
+                  name={
+                    savedPosts.includes(post._id)
+                      ? "bookmark"
+                      : "bookmark-outline"
+                  }
+                  size={24}
+                  color={savedPosts.includes(post._id) ? "#000" : "#8e8e8e"}
+                />
+              </TouchableOpacity>
+            </View>
           </View>
           <View style={styles.socialInfo}>
             <Text style={styles.likes}>{post.likes?.length || 0} likes</Text>
-            <Text style={styles.comments}>{post.comments?.length || 0} comments</Text>
+            <Text style={styles.comments}>
+              View all {post.comments?.length || 0} comments
+            </Text>
           </View>
-          {showCommentInput && (
-            <View style={styles.commentInputContainer}>
-              <TextInput
-                style={styles.commentInput}
-                placeholder="Add a comment..."
-                value={commentText}
-                onChangeText={setCommentText}
-              />
-              <TouchableOpacity onPress={() => handleComment(post._id)} style={styles.postCommentButton}>
-                <Text style={styles.postCommentButtonText}>Post</Text>
-              </TouchableOpacity>
-            </View>
-          )}
         </View>
       </View>
     );
   };
-  
-
+  const [comments, setComments] = useState([
+    {
+      image: require("../assets/avatar.png"),
+      comment: "I Still find it",
+      timing: "1h",
+      userName: "Samy",
+    },
+    {
+      image: require("../assets/avatar.png"),
+      comment: "I Still find it",
+      timing: "49m",
+      userName: "Raj",
+    },
+    {
+      image: require("../assets/avatar.png"),
+      comment: "I Still find it",
+      timing: "1h50m",
+      userName: "Samy",
+    },
+    {
+      image: require("../assets/avatar.png"),
+      comment: "I Still find it",
+      timing: "2h",
+      userName: "Ravi",
+    },
+    {
+      image: require("../assets/avatar.png"),
+      comment: "I Still find it",
+      timing: "1d",
+      userName: "Samoya",
+    },
+  ]);
   return (
-    <ScrollView
-      style={styles.container}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-    >
-              <Image style={styles.logo} source={logo} />
-              <TouchableOpacity style={styles.chatIconContainer} onPress={() => setShowChat(!showChat)}>
-          <Ionicons name="chatbubble-outline" size={24} color="black" />
-        </TouchableOpacity>
-      <View style={styles.header}>
-       
-
-        <TouchableOpacity style={styles.sidebarButton} onPress={() => console.log("Following pressed")}>
-         
-          <Text style={styles.sidebarButtonText}>Following</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.sidebarButton} onPress={() => console.log("You pressed")}>
-          <Text style={styles.sidebarButtonText}>You</Text>
-        </TouchableOpacity>
-        
-      </View>
-      <View style={styles.postContainer}>
-        {posts.map((post) => renderPost(post))}
-      </View>
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={closeOptionsModal}
+    <SafeAreaView style={styles.container}>
+      <ScrollView
+        style={styles.scrollView}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <TouchableOpacity onPress={closeOptionsModal}>
-              <Text style={styles.closeModalText}>Close</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => {}}>
-              <Text>saved</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => {}}>
-              <Text>Share</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => {}}>
-              <Text>Unfollow</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => {}}>
-              <Text>handleImagePicker</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => {}}>
-              <Text>About this account</Text>
+        <View style={styles.postContainer}>
+          {posts.map((post) => renderPost(post))}
+        </View>
+        {/* three dots modal */}
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={closeOptionsModal}
+        >
+          <View
+            style={[
+              styles.modalContainer,
+              { top: modalPosition.y, left: modalPosition.x },
+            ]}
+            {...panResponder.panHandlers}
+          >
+            <TouchableOpacity
+              style={styles.ThreeDotModaloverlay}
+              activeOpacity={1} // Ensure the touch doesn't pass through
+              onPress={closeOptionsModal} // Close the modal when overlay is pressed
+            />
+            <View style={styles.modalContent}>
+              <View style={styles.threeDotModalUpper}>
+                <TouchableOpacity style={styles.threeDotUpperIconContainer}>
+                  <View style={styles.threeDotUpperIcon}>
+                    <Feather name="bookmark" size={24} color="black" />
+                  </View>
+                  <Text style={styles.threeDotMiddleItemText}>Save</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.threeDotUpperIconContainer}>
+                  <View>
+                    <Image
+                      style={styles.threeDotUpperIcon}
+                      source={require("../assets/avatar.png")}
+                    />
+                  </View>
+                  <Text style={styles.threeDotMiddleItemText}>
+                    View profile
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.threeDotMiddleContainer}>
+                <TouchableOpacity style={styles.threeDotmiddleItems}>
+                  <Ionicons
+                    name="person-remove-outline"
+                    size={24}
+                    color="black"
+                  />
+                  <Text style={styles.threeDotMiddleItemText}>Unfollow</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.threeDotmiddleItems}>
+                  <Ionicons
+                    name="person-circle-outline"
+                    size={24}
+                    color="black"
+                  />
+                  <Text style={styles.threeDotMiddleItemText}>
+                    About this account
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.threeDotmiddleItems}>
+                  <Octicons name="report" size={24} color="black" />
+                  <Text style={styles.threeDotMiddleItemText}>Report</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+        {/* comments modal */}
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={showCommentInput}
+          onRequestClose={() => setShowCommentInput(false)}
+        >
+          <View
+            style={[
+              styles.modalContainer,
+              { top: modalPosition.y, left: modalPosition.x },
+            ]}
+            {...panResponder.panHandlers}
+          >
+            <TouchableOpacity
+              style={styles.ThreeDotModaloverlay}
+              activeOpacity={1} // Ensure the touch doesn't pass through
+              onPress={toggleCommentInput} // Close the modal when overlay is pressed
+            />
+            <View style={styles.modalContent}>
+              <ScrollView>
+                {comments.map((comment, index) => (
+                  <View key={index} style={styles.allCommentsContainer}>
+                    {/* Profile Image */}
+                    <Image
+                      source={comment.image}
+                      style={styles.commentProfileImage}
+                    />
+                    {/* Comment Text */}
+                    <View style={styles.rightSideContainer}>
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          justifyContent: "space-between",
+                        }}
+                      >
+                        <Text style={styles.userNameComment}>
+                          {comment.userName}
+                        </Text>
+                        <Text>{comment.timing}</Text>
+                      </View>
+                      <View style={styles.commentLike}>
+                        <Text style={styles.commentText}>
+                          {comment.comment}
+                        </Text>
+                        <TouchableOpacity
+                          style={{ paddingVertical: 5, paddingLeft: 5 }}
+                        >
+                          <AntDesign name={"hearto"} size={18} color={"gray"} />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  </View>
+                ))}
+              </ScrollView>
+            </View>
+          </View>
+          <View style={styles.commentInputContainer}>
+            <Image
+              source={require("../assets/avatar.png")}
+              style={styles.commentProfileImage}
+            />
+            <TextInput
+              style={styles.commentInput}
+              placeholder="Add a comment..."
+              value={commentText}
+              onChangeText={setCommentText}
+            />
+            <TouchableOpacity onPress={handleComment}>
+              <MaterialCommunityIcons
+                name="send-circle"
+                size={34}
+                color="black"
+              />
             </TouchableOpacity>
           </View>
-        </View>
-      </Modal>
-      {showChat && <MessageContainer />}
-    </ScrollView>
+        </Modal>
+        {showChat && <MessageContainer />}
+      </ScrollView>
+      {showAnimatedMessage && (
+        <AnimatedMessage
+          message={animatedMessage}
+          onAnimationEnd={handleAnimationEnd}
+          isVisible={showAnimatedMessage}
+        />
+      )}
+    </SafeAreaView>
   );
 };
 
@@ -264,38 +562,28 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "white",
   },
-  header: {
+  scrollView: {
+    flex: 1,
+    marginTop: 5,
+  },
+  navBar: {
     flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
-    marginTop: 0,
-    marginBottom: 0,
+    alignItems: "center",
+    paddingHorizontal: 10,
+    marginTop: 30,
     borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
-    paddingHorizontal: 20,
+    borderColor: "#ddd",
   },
   logo: {
     width: 80,
     height: 60,
-    top: 10,
-    right: 0,
-     resizeMode: "contain",
-   
-  },
-  sidebarButton: {
-    paddingHorizontal: 50,
-    paddingVertical: 10,
-    borderRadius: 5,
-  },
-  sidebarButtonText: {
-    color: "black",
+    resizeMode: "contain",
+    marginRight: "auto",
   },
   chatIconContainer: {
-    position: "absolute",
-    top: 20,
-    right: 10,
+    marginLeft: "auto",
   },
-  
   postContainer: {
     paddingHorizontal: 5,
   },
@@ -313,67 +601,112 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 8,
   },
+  postUserNameImg: {
+    flexDirection: "row",
+    gap: 10,
+    alignItems: "center",
+  },
   profilePicture: {
-    width: 40,
-    height: 10,
-    borderRadius: 20,
-    marginRight: 10,
+    width: 45,
+    height: 45,
+    borderRadius: 50,
   },
   username: {
+    fontWeight: "bold",
+  },
+  userNameComment: {
     fontWeight: "bold",
   },
   postContent: {
     minHeight: 100,
     paddingVertical: 10,
   },
+  captions: {
+    paddingHorizontal: 10,
+    marginBottom: 5,
+    fontWeight: "500",
+  },
   postImage: {
     width: "100%",
-    height: 550,
+    height: 300,
   },
   actionButtons: {
+    display: "flex",
+    alignItems: "center",
     flexDirection: "row",
-    paddingHorizontal: 5,
+    justifyContent: "space-between",
+    paddingHorizontal: 8,
     paddingVertical: 10,
-    borderTopWidth: 1,
-    borderColor: "#ddd",
   },
-  actionButton: {
-    marginHorizontal: 5,
+  actionLeftButtons: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  socialInfo: {
+    paddingHorizontal: 15,
   },
   likes: {
     fontWeight: "bold",
-    paddingHorizontal: 10,
     marginBottom: 5,
+  },
+  comments: {
+    fontWeight: "bold",
+    color: "#000",
+    opacity: 0.5,
   },
   modalContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
   },
   modalContent: {
     backgroundColor: "white",
+    minHeight: 600,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     padding: 20,
-    borderRadius: 10,
-    elevation: 5,
   },
-  closeModalText: {
-    alignSelf: "flex-end",
-    marginBottom: 10,
+  allCommentsContainer: {
+    flexDirection: "row",
+    gap: 10,
+    marginVertical: 10,
+    paddingHorizontal: 10,
+  },
+  commentLike: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  commentText: {
+    flex: 1,
+  },
+  rightSideContainer: {
+    flex: 1,
   },
   commentInputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 10,
     paddingHorizontal: 10,
+    paddingVertical: 5,
+    gap: 5,
+    borderTopWidth: 1,
+    borderColor: "#000",
+    backgroundColor: "#fff",
+  },
+  commentProfileImage: {
+    width: 45,
+    height: 45,
+    borderRadius: 50,
   },
   commentInput: {
-    flex: 1,
     height: 40,
-    borderWidth: 1,
-    borderColor: "#ddd",
+    flex: 1,
+    // borderWidth: 1,
+    // borderColor: "#000",
     borderRadius: 5,
     paddingHorizontal: 10,
+    paddingVertical: 10,
+    marginHorizontal: 5,
   },
   postCommentButton: {
     marginLeft: 10,
@@ -384,6 +717,45 @@ const styles = StyleSheet.create({
   },
   postCommentButtonText: {
     color: "#fff",
+  },
+  threeDotModalUpper: {
+    justifyContent: "center",
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 50,
+    paddingVertical: 30,
+  },
+  threeDotUpperIconContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 10,
+  },
+  threeDotUpperIcon: {
+    width: 60,
+    height: 60,
+    borderRadius: 50,
+    borderWidth: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    overflow: "hidden",
+  },
+  threeDotMiddleContainer: {
+    gap: 30,
+  },
+  threeDotMiddleItemText: {
+    fontWeight: "700",
+  },
+  threeDotmiddleItems: {
+    flexDirection: "row",
+    gap: 10,
+    alignItems: "center",
+  },
+  ThreeDotModaloverlay: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
   },
 });
 
